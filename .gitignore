@@ -58,6 +58,23 @@ ENV/
 # React Native / Expo
 .expo/
 .expo-shared/
+mobile/.expo/
+mobile/node_modules/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# Backend Python
+backend/.venv/
+backend/__pycache__/
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
 
 # Temporary files
 *.tmp
