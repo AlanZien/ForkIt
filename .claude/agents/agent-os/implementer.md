@@ -17,11 +17,23 @@ Implement all tasks assigned to you and ONLY those task(s) that have been assign
 3. **If test-plan.md exists**: Write tests FIRST following Given-When-Then specifications exactly, then implement code to make tests pass (True TDD)
 4. **If test-plan.md does NOT exist**: Implement assigned task group according to requirements and standards, writing tests alongside
 5. Update `agent-os/specs/[this-spec]/tasks.md` to update the tasks you've implemented to mark that as done by updating their checkbox to checked state: `- [x]`
-6. Sync completed tasks to Notion:
-   ```bash
-   node scripts/sync-to-notion.js "agent-os/specs/[this-spec]"
-   ```
-   This updates Task statuses in Notion and tracks progress automatically.
+6. Sync completed tasks to Notion via MCP:
+   - Use `mcp__plugin_Notion_notion__notion-search` to find the task by Task ID in ✅ Tasks database
+   - Use `mcp__plugin_Notion_notion__notion-update-page` to update the task status:
+     - Set `Status` to "Terminé" when task is completed
+     - Set `Status` to "En cours" when starting a task
+   - After completing a Task Group, update the parent 🎯 Project:
+     - Calculate and update `Avancement` (percentage of completed tasks)
+     - If all tasks completed, set `Status` to "Terminé"
+
+   **Status Mapping (French):**
+   | State | Notion Status |
+   |-------|---------------|
+   | Starting task | "En cours" |
+   | Task completed | "Terminé" |
+   | Task blocked | "En attente" |
+
+   **Note**: If Notion sync fails, continue with implementation. tasks.md is the source of truth.
 
 ## REQUIRED: Use Core Service Abstractions
 
@@ -163,56 +175,52 @@ Test failures fall into three categories. Handle each differently:
    - Verify function signatures match test expectations
    - Review similar working code in codebase
 
-4. **If still stuck after 30 minutes → Log Bug in Notion**
+4. **If still stuck after 30 minutes → Log Bug in Notion via MCP**
 
-   Open your Notion workspace: 🐛 Bugs database
+   Use `mcp__plugin_Notion_notion__notion-create-pages` to create a bug entry in the 🐛 Bugs database.
 
-   Create new bug entry with:
-   - **Name**: `[test_function_name] fails - [brief description]`
-     - Example: `test_user_creation_requires_email fails - ValidationError not raised`
+   **Database:** `collection://9bc9eef1-dad7-4839-a7fd-689f1eff91ad` (🐛 Bugs)
 
-   - **Test Name**: Exact test function name from test-plan.md
-     - Example: `test_user_creation_requires_email`
+   **Property Mapping:**
 
-   - **Test File**: Full path to test file
-     - Example: `backend/tests/models/test_user.py`
+   | Field | Notion Property | Example |
+   |-------|-----------------|---------|
+   | Title | `Name` | "test_user_creation_requires_email fails - ValidationError not raised" |
+   | Test function | `Test Name` | "test_user_creation_requires_email" |
+   | Test file path | `Test File` | "backend/tests/models/test_user.py" |
+   | Error output | `Error Message` | Raw error from test run |
+   | Priority mapping | `Severity` | "Critical", "High", "Medium", "Low" |
+   | Initial status | `Status` | "New" |
+   | Context & attempts | `Steps to Reproduce` | What you tried, debug info |
+   | Today's date | `date:Reported Date:start` | "2025-12-31" |
+   | Parent project | `Project` | Relation to 🎯 Projects page |
+   | Related task | `Task` | Relation to ✅ Tasks page |
 
-   - **Error Message**: Copy raw error output from test run
-     - Example:
-       ```
-       AssertionError: ValidationError not raised
-       Expected: ValidationError('email is required')
-       Actual: None
-       ```
+   **Severity Mapping from test-plan.md:**
+   - test-plan.md Priority "Critical" → Severity "Critical"
+   - test-plan.md Priority "High" → Severity "High"
+   - test-plan.md Priority "Medium" → Severity "Medium"
+   - test-plan.md Priority "Low" → Severity "Low"
 
-   - **Severity**: Match the Priority from test-plan.md
-     - test-plan.md Priority "Critical" → Severity "Critical"
-     - test-plan.md Priority "High" → Severity "High"
-     - test-plan.md Priority "Medium" → Severity "Medium"
-     - test-plan.md Priority "Low" → Severity "Low"
-
-   - **Status**: "New"
-
-   - **Project**: Link to the current project you're working on
-
-   - **Task**: Link to the specific task being worked on
-     - Example: Task "1.1 Write database layer tests"
-
-   - **Steps to Reproduce**: Provide context
-     - Example:
-       ```
-       Context: Implementing Database Layer Task Group 1
-       Test: test_user_creation_requires_email (test #1 from test-plan.md)
-
-       Attempted Fixes:
-       1. Added email validation in User.__init__ - still fails
-       2. Checked that ValidationError is imported from correct module
-       3. Added debug print - User.create() returns None instead of raising error
-       ```
-
-   - **Reported Date**: Today's date (auto-filled by Notion)
-
-   - **Assignee**: Yourself or leave blank for user to assign
+   **Example MCP call:**
+   ```json
+   {
+     "parent": {"type": "data_source_id", "data_source_id": "9bc9eef1-dad7-4839-a7fd-689f1eff91ad"},
+     "pages": [{
+       "properties": {
+         "Name": "test_user_creation_requires_email fails - ValidationError not raised",
+         "Test Name": "test_user_creation_requires_email",
+         "Test File": "backend/tests/models/test_user.py",
+         "Error Message": "AssertionError: ValidationError not raised",
+         "Severity": "Critical",
+         "Status": "New",
+         "Steps to Reproduce": "Context: Database Layer Task Group 1\nAttempted: Added validation in __init__ - still fails",
+         "date:Reported Date:start": "2025-12-31",
+         "date:Reported Date:is_datetime": 0
+       }
+     }]
+   }
+   ```
 
 5. **After logging bug:**
    - **DO NOT** skip the test or comment it out

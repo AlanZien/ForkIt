@@ -202,19 +202,69 @@ Recommended implementation sequence:
 - Different execution order based on dependencies
 - More or fewer sub-tasks per group
 
-### Step 3: Sync to Notion
+### Step 3: Sync to Notion via MCP
 
-Sync the tasks to Notion for tracking:
+Sync the tasks to Notion using MCP Notion tools directly.
 
-```bash
-node scripts/sync-to-notion.js "[spec-path]"
+#### 3.1 Find the parent Project in Notion
+
+Use `mcp__plugin_Notion_notion__notion-search` to find the corresponding project:
+- Search for the spec/feature name in the 🎯 Projects database
+- If no project exists, inform the user and skip Notion sync
+
+#### 3.2 Create Tasks in Notion
+
+Use `mcp__plugin_Notion_notion__notion-create-pages` to create all tasks in the ✅ Tasks database.
+
+**Database:** `collection://b1bd12ac-cd52-42dd-a557-c50718b20ef7` (✅ Tasks)
+
+**Property Mapping:**
+
+| tasks.md Field | Notion Property | Value |
+|----------------|-----------------|-------|
+| Task ID (e.g., "1.1") | `Task ID` | Text |
+| Task description | `Name` | Title (format: "1.1 Description") |
+| Task group name | `Task Group` | Text |
+| Completed ([ ] or [x]) | `Status` | "A Faire" or "Terminé" |
+| Layer type | `Tags` | "Backend", "Frontend", "Database", "Testing" |
+| Priority | `Priority Level` | "Haute" (parent tasks), "Moyenne" (sub-tasks) |
+| Parent project | `🎯 Projects` | Relation to project page URL |
+
+**Status Mapping (French):**
+- `[ ]` unchecked → "A Faire"
+- `[x]` checked → "Terminé"
+- In progress → "En cours"
+
+**Tags Mapping:**
+- Database Layer → "Database"
+- API Layer → "Backend"
+- Frontend Components → "Frontend"
+- Testing → "Testing"
+
+#### 3.3 Update Project Status
+
+Use `mcp__plugin_Notion_notion__notion-update-page` to update the parent project:
+- Set `Status` to "En cours"
+- Set `Avancement` to 0 (will be updated as tasks complete)
+
+#### Example: Creating a task
+
+```json
+{
+  "parent": {"type": "data_source_id", "data_source_id": "b1bd12ac-cd52-42dd-a557-c50718b20ef7"},
+  "pages": [{
+    "properties": {
+      "Name": "1.1 Create user model with validations",
+      "Task ID": "1.1",
+      "Task Group": "Database Layer",
+      "Status": "A Faire",
+      "Tags": "Database",
+      "Priority Level": "Moyenne",
+      "🎯 Projects": "[{\"id\": \"project-page-id\"}]"
+    }
+  }]
+}
 ```
-
-This:
-- Creates all Tasks in Notion linked to the Project
-- Sets all Task statuses to "Todo"
-- Updates Project Status to "In Progress"
-- Updates Current Agent to "tasks-list-creator"
 
 **Note**: If Notion sync fails, the workflow continues normally. Tasks are tracked in tasks.md as the source of truth.
 
