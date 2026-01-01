@@ -3,8 +3,10 @@
  *
  * Uses expo-secure-store for sensitive data (tokens, biometric preferences)
  * Tokens are stored in iOS Keychain / Android Keystore
+ * Falls back to localStorage on web
  */
 
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 // Storage keys
@@ -15,6 +17,32 @@ const KEYS = {
 } as const;
 
 /**
+ * Platform-safe storage helpers
+ */
+async function setItem(key: string, value: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    localStorage.setItem(key, value);
+    return;
+  }
+  await SecureStore.setItemAsync(key, value);
+}
+
+async function getItem(key: string): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    return localStorage.getItem(key);
+  }
+  return SecureStore.getItemAsync(key);
+}
+
+async function removeItem(key: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    localStorage.removeItem(key);
+    return;
+  }
+  await SecureStore.deleteItemAsync(key);
+}
+
+/**
  * Save authentication tokens securely
  */
 export async function saveTokens(
@@ -22,8 +50,8 @@ export async function saveTokens(
   refreshToken: string
 ): Promise<void> {
   await Promise.all([
-    SecureStore.setItemAsync(KEYS.ACCESS_TOKEN, accessToken),
-    SecureStore.setItemAsync(KEYS.REFRESH_TOKEN, refreshToken),
+    setItem(KEYS.ACCESS_TOKEN, accessToken),
+    setItem(KEYS.REFRESH_TOKEN, refreshToken),
   ]);
 }
 
@@ -35,8 +63,8 @@ export async function getTokens(): Promise<{
   refreshToken: string | null;
 }> {
   const [accessToken, refreshToken] = await Promise.all([
-    SecureStore.getItemAsync(KEYS.ACCESS_TOKEN),
-    SecureStore.getItemAsync(KEYS.REFRESH_TOKEN),
+    getItem(KEYS.ACCESS_TOKEN),
+    getItem(KEYS.REFRESH_TOKEN),
   ]);
 
   return { accessToken, refreshToken };
@@ -47,8 +75,8 @@ export async function getTokens(): Promise<{
  */
 export async function clearTokens(): Promise<void> {
   await Promise.all([
-    SecureStore.deleteItemAsync(KEYS.ACCESS_TOKEN),
-    SecureStore.deleteItemAsync(KEYS.REFRESH_TOKEN),
+    removeItem(KEYS.ACCESS_TOKEN),
+    removeItem(KEYS.REFRESH_TOKEN),
   ]);
 }
 
@@ -56,14 +84,14 @@ export async function clearTokens(): Promise<void> {
  * Save biometric preference
  */
 export async function saveBiometricPreference(enabled: boolean): Promise<void> {
-  await SecureStore.setItemAsync(KEYS.BIOMETRIC_ENABLED, enabled ? 'true' : 'false');
+  await setItem(KEYS.BIOMETRIC_ENABLED, enabled ? 'true' : 'false');
 }
 
 /**
  * Get biometric preference
  */
 export async function getBiometricPreference(): Promise<boolean> {
-  const value = await SecureStore.getItemAsync(KEYS.BIOMETRIC_ENABLED);
+  const value = await getItem(KEYS.BIOMETRIC_ENABLED);
   return value === 'true';
 }
 
@@ -71,7 +99,7 @@ export async function getBiometricPreference(): Promise<boolean> {
  * Clear biometric preference
  */
 export async function clearBiometricPreference(): Promise<void> {
-  await SecureStore.deleteItemAsync(KEYS.BIOMETRIC_ENABLED);
+  await removeItem(KEYS.BIOMETRIC_ENABLED);
 }
 
 /**

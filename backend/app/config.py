@@ -12,7 +12,14 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # CORS
-    cors_origins: list[str] = ["http://localhost:8081", "http://localhost:19006"]
+    cors_origins: list[str] = [
+        "http://localhost:8081",
+        "http://localhost:19006",
+        "http://192.168.1.27:8081",
+        "http://192.168.1.27:19006",
+        "exp://192.168.1.27:8081",
+        "*",  # Allow all for development
+    ]
 
     # Supabase
     supabase_url: str = ""

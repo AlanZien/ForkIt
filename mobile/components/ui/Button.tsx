@@ -25,6 +25,7 @@ interface ButtonProps {
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  testID?: string;
 }
 
 export function Button({
@@ -35,6 +36,7 @@ export function Button({
   disabled = false,
   style,
   textStyle,
+  testID,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
@@ -54,6 +56,7 @@ export function Button({
 
   return (
     <TouchableOpacity
+      testID={testID}
       style={buttonStyles}
       onPress={onPress}
       disabled={isDisabled}

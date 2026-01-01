@@ -12,7 +12,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,6 +26,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const validate = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
@@ -47,6 +47,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!validate()) return;
+    setLoginError(null);
 
     try {
       await login(email, password);
@@ -61,10 +62,7 @@ export default function LoginScreen() {
         return;
       }
 
-      Alert.alert(
-        'Erreur de connexion',
-        'Email ou mot de passe incorrect'
-      );
+      setLoginError('Email ou mot de passe incorrect');
     }
   };
 
@@ -96,6 +94,12 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
+            {loginError && (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorText}>{loginError}</Text>
+              </View>
+            )}
+
             <Input
               label="Email"
               placeholder="votre@email.com"
@@ -175,6 +179,17 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
+  },
+  errorBanner: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#DC2626',
+    fontSize: 14,
+    textAlign: 'center',
   },
   submitButton: {
     marginTop: 8,

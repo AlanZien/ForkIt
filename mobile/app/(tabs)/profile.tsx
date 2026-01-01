@@ -1,16 +1,18 @@
 /**
  * Profile Screen
  *
- * User profile and settings with logout
+ * User profile, preferences, and settings with logout
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, Switch, Alert, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Button } from '../../components/ui';
+import { ProfilePreferences } from '../../components/preferences';
 import { useAuthStore } from '../../stores/auth';
 import { checkBiometricSupport, getBiometricType, getBiometricLabel, authenticate } from '../../services/biometric';
+import { colors, spacing } from '../../constants/theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -21,7 +23,7 @@ export default function ProfileScreen() {
   const isLoading = useAuthStore((state) => state.isLoading);
 
   const [biometricSupported, setBiometricSupported] = useState(false);
-  const [biometricType, setBiometricTypeState] = useState<string>('Biométrie');
+  const [biometricType, setBiometricTypeState] = useState<string>('Biometrie');
 
   const userName = user?.user_metadata?.name || 'Utilisateur';
   const userEmail = user?.email || '';
@@ -53,31 +55,45 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Déconnexion',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            router.replace('/(auth)/login');
+  const handleLogout = async () => {
+    const doLogout = async () => {
+      await logout();
+      router.replace('/(auth)/login');
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Etes-vous sur de vouloir vous deconnecter ?')) {
+        await doLogout();
+      }
+    } else {
+      Alert.alert(
+        'Deconnexion',
+        'Etes-vous sur de vouloir vous deconnecter ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Deconnexion',
+            style: 'destructive',
+            onPress: doLogout,
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Profil</Text>
-      </View>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Profil</Text>
+        </View>
 
-      <View style={styles.content}>
+        {/* User Card */}
         <View style={styles.userCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
@@ -90,32 +106,43 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {biometricSupported && (
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Utiliser {biometricType}</Text>
-              <Text style={styles.settingDescription}>
-                Connexion rapide avec {biometricType}
-              </Text>
+        {/* Preferences Section */}
+        <View style={styles.preferencesSection}>
+          <ProfilePreferences />
+        </View>
+
+        {/* Settings Section */}
+        <View style={styles.settingsSection}>
+          <Text style={styles.sectionTitle}>Parametres</Text>
+
+          {biometricSupported && (
+            <View style={styles.settingItem}>
+              <View style={styles.settingInfo}>
+                <Text style={styles.settingLabel}>Utiliser {biometricType}</Text>
+                <Text style={styles.settingDescription}>
+                  Connexion rapide avec {biometricType}
+                </Text>
+              </View>
+              <Switch
+                value={biometricEnabled}
+                onValueChange={handleBiometricToggle}
+                trackColor={{ false: '#E5E7EB', true: colors.primary }}
+                thumbColor="#FFFFFF"
+              />
             </View>
-            <Switch
-              value={biometricEnabled}
-              onValueChange={handleBiometricToggle}
-              trackColor={{ false: '#E5E7EB', true: '#14B8A6' }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
-        )}
+          )}
+        </View>
 
-        <View style={styles.spacer} />
-
-        <Button
-          title="Se déconnecter"
-          variant="danger"
-          onPress={handleLogout}
-          loading={isLoading}
-        />
-      </View>
+        {/* Logout Button */}
+        <View style={styles.logoutSection}>
+          <Button
+            title="Se deconnecter"
+            variant="danger"
+            onPress={handleLogout}
+            loading={isLoading}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -123,43 +150,45 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 16,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
+    color: colors.foreground,
   },
   userCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.card,
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
   },
   avatar: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#14B8A6',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: spacing.md,
   },
   avatarText: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.primaryForeground,
   },
   userInfo: {
     flex: 1,
@@ -167,36 +196,48 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.foreground,
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.mutedForeground,
+  },
+  preferencesSection: {
+    marginBottom: spacing.lg,
+  },
+  settingsSection: {
+    marginBottom: spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.foreground,
+    marginBottom: spacing.md,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: spacing.md,
   },
   settingInfo: {
     flex: 1,
-    marginRight: 16,
+    marginRight: spacing.md,
   },
   settingLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#111827',
+    color: colors.foreground,
     marginBottom: 4,
   },
   settingDescription: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.mutedForeground,
   },
-  spacer: {
-    flex: 1,
+  logoutSection: {
+    marginTop: spacing.lg,
   },
 });
