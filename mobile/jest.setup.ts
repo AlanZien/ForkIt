@@ -10,6 +10,14 @@ global.fetch = jest.fn();
 // Mock expo module
 jest.mock('expo', () => ({}));
 
+// Mock @expo/vector-icons
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: 'Ionicons',
+  MaterialIcons: 'MaterialIcons',
+  FontAwesome: 'FontAwesome',
+  Feather: 'Feather',
+}), { virtual: true });
+
 // Mock expo-secure-store
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(),
