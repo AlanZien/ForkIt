@@ -46,6 +46,18 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git push:*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-push-report.sh",
+            "statusMessage": "Exécution des tests avant push..."
+          }
+        ]
+      }
     ]
   }
 }
