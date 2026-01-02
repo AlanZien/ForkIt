@@ -3,7 +3,7 @@
 Defines all authentication endpoints for the ForkIt API.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, status
+from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
 
 from app.models.auth import (
     LoginRequest,
@@ -18,6 +18,7 @@ from app.services.auth_service import (
     AuthService,
     EmailNotVerifiedError,
 )
+from app.utils.rate_limiter import AUTH_RATE_LIMIT, VERIFICATION_RATE_LIMIT, limiter
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -75,7 +76,9 @@ def get_current_user(
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
+@limiter.limit(AUTH_RATE_LIMIT)
 def register(
+    request: Request,
     data: RegisterRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> UserResponse:
@@ -101,7 +104,9 @@ def register(
 
 
 @router.post("/login", response_model=LoginResponse)
+@limiter.limit(AUTH_RATE_LIMIT)
 def login(
+    request: Request,
     data: LoginRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> LoginResponse:
@@ -168,7 +173,9 @@ def logout(auth_service: AuthService = Depends(get_auth_service)) -> None:
 
 
 @router.post("/password-reset")
+@limiter.limit(VERIFICATION_RATE_LIMIT)
 def request_password_reset(
+    request: Request,
     data: PasswordResetRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> dict:
@@ -201,7 +208,9 @@ def get_me(current_user: UserResponse = Depends(get_current_user)) -> UserRespon
 
 
 @router.post("/resend-verification")
+@limiter.limit(VERIFICATION_RATE_LIMIT)
 def resend_verification(
+    request: Request,
     data: PasswordResetRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> dict:

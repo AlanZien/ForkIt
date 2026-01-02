@@ -5,12 +5,17 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.routes.auth import router as auth_router
 from app.routes.profile import router as profile_router
+from app.utils.rate_limiter import limiter
 
-logging.basicConfig(level=logging.DEBUG)
+# Set logging level based on debug mode
+log_level = logging.DEBUG if settings.debug else logging.INFO
+logging.basicConfig(level=log_level)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -18,6 +23,10 @@ app = FastAPI(
     description="Family meal planning and recipe management API",
     version="0.1.0",
 )
+
+# Rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS middleware for mobile app
 app.add_middleware(

@@ -10,14 +10,13 @@ from pydantic import BaseModel, EmailStr, field_validator, model_validator
 
 
 def sanitize_string(value: str) -> str:
-    """Remove potentially dangerous characters from input.
+    """Sanitize input by removing HTML tags.
 
-    Removes HTML tags and common injection patterns.
+    Note: SQL injection is prevented by using parameterized queries (Supabase),
+    not by stripping characters. We only remove HTML to prevent XSS.
     """
-    # Remove HTML tags
+    # Remove HTML tags to prevent XSS
     value = re.sub(r"<[^>]*>", "", value)
-    # Remove potential SQL injection characters (but keep common punctuation)
-    value = re.sub(r"[;'\"\-\-]", "", value)
     return value.strip()
 
 

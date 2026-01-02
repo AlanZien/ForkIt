@@ -18,9 +18,16 @@ const KEYS = {
 
 /**
  * Platform-safe storage helpers
+ *
+ * WARNING: On web, localStorage is used which is vulnerable to XSS attacks.
+ * For production web apps, consider using HTTP-only cookies instead.
+ * Mobile platforms use secure native storage (iOS Keychain / Android Keystore).
  */
 async function setItem(key: string, value: string): Promise<void> {
   if (Platform.OS === 'web') {
+    // WARNING: localStorage is not secure for sensitive tokens on web
+    // Consider using HTTP-only cookies for production web deployments
+    console.warn('[SecureStorage] Using localStorage on web - not recommended for production');
     localStorage.setItem(key, value);
     return;
   }
