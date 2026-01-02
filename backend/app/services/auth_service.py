@@ -68,7 +68,7 @@ class AuthService:
             if not response.user:
                 raise AuthError("Registration failed")
 
-            # Handle created_at - may be datetime or string depending on Supabase version
+            # Handle created_at - may be datetime or string
             created_at = response.user.created_at
             if isinstance(created_at, str):
                 created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
@@ -115,7 +115,7 @@ class AuthService:
             if not response.user.email_confirmed_at:
                 raise EmailNotVerifiedError()
 
-            # Handle created_at - may be datetime or string depending on Supabase version
+            # Handle created_at - may be datetime or string
             created_at = response.user.created_at
             if isinstance(created_at, str):
                 created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
@@ -160,7 +160,7 @@ class AuthService:
             if not response.user or not response.session:
                 raise AuthError("Token refresh failed")
 
-            # Handle created_at - may be datetime or string depending on Supabase version
+            # Handle created_at - may be datetime or string
             created_at = response.user.created_at
             if isinstance(created_at, str):
                 created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
@@ -242,7 +242,7 @@ class AuthService:
             if not response.user:
                 return None
 
-            # Handle created_at - may be datetime or string depending on Supabase version
+            # Handle created_at - may be datetime or string
             created_at = response.user.created_at
             if isinstance(created_at, str):
                 created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))

@@ -4,7 +4,6 @@ Handles all user preferences operations with Supabase.
 """
 
 import logging
-from typing import Any
 
 from app.models.preferences import (
     AllergyType,

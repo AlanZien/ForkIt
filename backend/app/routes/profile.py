@@ -3,7 +3,7 @@
 Defines user profile and preferences endpoints for the ForkIt API.
 """
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 
 from app.models.auth import UserResponse
 from app.models.preferences import UserPreferencesResponse, UserPreferencesUpdate

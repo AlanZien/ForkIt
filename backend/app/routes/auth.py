@@ -3,7 +3,7 @@
 Defines all authentication endpoints for the ForkIt API.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 
 from app.models.auth import (
     LoginRequest,
@@ -75,7 +75,9 @@ def get_current_user(
     return user
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
+@router.post(
+    "/register", status_code=status.HTTP_201_CREATED, response_model=UserResponse
+)
 @limiter.limit(AUTH_RATE_LIMIT)
 def register(
     request: Request,
@@ -191,7 +193,8 @@ def request_password_reset(
         Success message.
     """
     auth_service.request_password_reset(data.email)
-    return {"message": "If an account exists with this email, a reset link has been sent."}
+    msg = "If an account exists with this email, a reset link has been sent."
+    return {"message": msg}
 
 
 @router.get("/me", response_model=UserResponse)
@@ -224,4 +227,5 @@ def resend_verification(
         Success message.
     """
     auth_service.resend_verification_email(data.email)
-    return {"message": "If an account exists with this email, a verification link has been sent."}
+    msg = "If an account exists with this email, a verification link has been sent."
+    return {"message": msg}

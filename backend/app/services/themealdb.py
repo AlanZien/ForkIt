@@ -14,7 +14,8 @@ class TheMealDBClient:
     async def search_by_name(self, name: str) -> dict:
         """Search meals by name."""
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{self.base_url}/search.php", params={"s": name})
+            url = f"{self.base_url}/search.php"
+            response = await client.get(url, params={"s": name})
             return response.json()
 
     async def get_by_id(self, meal_id: str) -> dict:
@@ -40,7 +41,8 @@ class TheMealDBClient:
     async def filter_by_category(self, category: str) -> dict:
         """Filter meals by category."""
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{self.base_url}/filter.php", params={"c": category})
+            url = f"{self.base_url}/filter.php"
+            response = await client.get(url, params={"c": category})
             return response.json()
 
 
