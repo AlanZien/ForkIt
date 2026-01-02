@@ -36,7 +36,7 @@ class TestGetPreferences:
     Corresponds to test-plan.md tests 21-30 (GET /api/profile/preferences).
     """
 
-    @patch("app.services.preferences_service.get_supabase_client")
+    @patch("app.services.preferences_service.get_supabase_admin")
     def test_get_preferences_returns_all_user_preferences(self, mock_get_client):
         """Test that get_preferences returns all preferences for a user.
 
@@ -135,7 +135,7 @@ class TestGetPreferences:
         assert "basilic" in result.preferred_ingredients
         assert result.portions_count == 4
 
-    @patch("app.services.preferences_service.get_supabase_client")
+    @patch("app.services.preferences_service.get_supabase_admin")
     def test_get_preferences_new_user_returns_defaults(self, mock_get_client):
         """Test that new user without preferences gets default values.
 
@@ -168,7 +168,7 @@ class TestGetPreferences:
         assert result.preferred_ingredients == []
         assert result.portions_count == 2  # Default value from service
 
-    @patch("app.services.preferences_service.get_supabase_client")
+    @patch("app.services.preferences_service.get_supabase_admin")
     def test_get_preferences_with_partial_data(self, mock_get_client):
         """Test that partial data (only allergies) is handled correctly.
 
@@ -239,7 +239,7 @@ class TestUpdatePreferences:
     Corresponds to test-plan.md tests 31-50 (PUT /api/profile/preferences).
     """
 
-    @patch("app.services.preferences_service.get_supabase_client")
+    @patch("app.services.preferences_service.get_supabase_admin")
     def test_update_preferences_full_payload_success(self, mock_get_client):
         """Test that full payload update succeeds.
 
@@ -359,7 +359,7 @@ class TestUpdatePreferences:
         errors = exc_info.value.errors()
         assert any("incompatible" in str(e).lower() for e in errors)
 
-    @patch("app.services.preferences_service.get_supabase_client")
+    @patch("app.services.preferences_service.get_supabase_admin")
     def test_update_dietary_preferences_halal_kosher_allowed_with_warning(
         self, mock_get_client
     ):
@@ -410,7 +410,7 @@ class TestUpdatePreferences:
         assert result.warning is not None
         assert "coherence" in result.warning.lower() or "combination" in result.warning.lower()
 
-    @patch("app.services.preferences_service.get_supabase_client")
+    @patch("app.services.preferences_service.get_supabase_admin")
     def test_update_ingredients_normalization(self, mock_get_client):
         """Test that ingredients are normalized (lowercase, trim) before storage.
 
@@ -458,7 +458,7 @@ class TestUpdatePreferences:
         assert "tomate" in result.excluded_ingredients
         assert "oignon" in result.excluded_ingredients
 
-    @patch("app.services.preferences_service.get_supabase_client")
+    @patch("app.services.preferences_service.get_supabase_admin")
     def test_update_empty_payload_clears_preferences(self, mock_get_client):
         """Test that empty payload clears all preferences.
 

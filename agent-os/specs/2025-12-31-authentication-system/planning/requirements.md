@@ -60,7 +60,7 @@ The existing design reference (`agent-os/product/design-references/Image PNG.png
 
 **Onboarding Screen:**
 - App logo with teal decorative blob background
-- "Yummy" branding with tagline "Let's cook good food"
+- "ForkIt" branding with tagline "Let's cook good food"
 - Three feature highlights with icons:
   - Planning hebdomadaire (weekly planning)
   - Liste de courses automatique (automatic shopping list)
