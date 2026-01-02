@@ -22,7 +22,7 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install fastapi uvicorn python-dotenv supabase pydantic[email] bcrypt python-jose[cryptography]
+pip install fastapi uvicorn python-dotenv supabase pydantic[email] pydantic-settings bcrypt python-jose[cryptography] slowapi httpx
 
 # Create requirements.txt
 pip freeze > requirements.txt
@@ -62,15 +62,46 @@ backend/
 
 **app/config.py**
 ```python
+import secrets
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 
 class Settings(BaseSettings):
     app_name: str = "ForkIt API"
+    debug: bool = False
+
+    # Supabase
     supabase_url: str
     supabase_key: str
-    jwt_secret: str
+    supabase_service_role_key: str = ""
+
+    # Security
+    jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 30
+
+    # CORS - MUST be configured for production
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8081"]
+
+    @field_validator("jwt_secret", mode="before")
+    @classmethod
+    def generate_jwt_secret(cls, v: str) -> str:
+        """Auto-generate secure JWT secret if not provided."""
+        if not v:
+            return secrets.token_urlsafe(64)
+        if len(v) < 32:
+            raise ValueError("JWT secret must be at least 32 characters")
+        return v
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def validate_cors(cls, v):
+        """Prevent wildcard CORS in production."""
+        if isinstance(v, str):
+            v = [origin.strip() for origin in v.split(",")]
+        if "*" in v:
+            raise ValueError("CORS wildcard '*' is not allowed. Specify explicit origins.")
+        return v
 
     class Config:
         env_file = ".env"
@@ -88,19 +119,42 @@ supabase: Client = create_client(settings.supabase_url, settings.supabase_key)
 
 **app/main.py**
 ```python
-from fastapi import FastAPI
+import logging
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from app.config import settings
 from app.routers import auth
 
-app = FastAPI(title="ForkIt API", version="1.0.0")
+# Logging - level based on debug mode
+log_level = logging.DEBUG if settings.debug else logging.INFO
+logging.basicConfig(level=log_level)
+logger = logging.getLogger(__name__)
 
-# CORS
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
+app = FastAPI(
+    title="ForkIt API",
+    version="1.0.0",
+    docs_url="/docs" if settings.debug else None,  # Disable docs in prod
+    redoc_url="/redoc" if settings.debug else None,
+)
+
+# Rate limiter setup
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS - uses validated origins from config
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for production
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Routers
@@ -115,11 +169,34 @@ async def health():
     return {"status": "healthy"}
 ```
 
+**app/rate_limit.py**
+```python
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+
+# Rate limit constants - adjust per endpoint sensitivity
+AUTH_RATE_LIMIT = "5/minute"      # Login, register
+STRICT_RATE_LIMIT = "3/minute"   # Password reset, email verification
+API_RATE_LIMIT = "60/minute"     # General API endpoints
+```
+
 **.env.example**
 ```bash
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-anon-key
-JWT_SECRET=your-secret-key-generate-with-openssl-rand-hex-32
+# Debug mode - set to false in production
+DEBUG=true
+
+# Supabase - get from https://supabase.com/dashboard/project/YOUR_PROJECT/settings/api
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_KEY=your_anon_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+
+# JWT - leave empty to auto-generate, or set 64+ char secret
+JWT_SECRET=
+
+# CORS - comma-separated list of allowed origins
+CORS_ORIGINS=http://localhost:3000,http://localhost:8081
 ```
 
 **.gitignore**
@@ -233,28 +310,95 @@ mobile/
 
 **services/api.ts**
 ```typescript
-import axios from 'axios';
+import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
-export const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
+// Storage abstraction for cross-platform support
+const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    }
+    return SecureStore.getItemAsync(key);
   },
-});
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      console.warn('[Storage] Using localStorage on web - not secure for tokens');
+      localStorage.setItem(key, value);
+      return;
+    }
+    await SecureStore.setItemAsync(key, value);
+  },
+  async deleteItem(key: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(key);
+      return;
+    }
+    await SecureStore.deleteItemAsync(key);
+  },
+};
 
-// Add auth token to requests
-api.interceptors.request.use(async (config) => {
-  const token = await SecureStore.getItemAsync('auth_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+class ApiClient {
+  private baseUrl: string;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
   }
-  return config;
-});
 
-export default api;
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const token = await storage.getItem('auth_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+  }
+
+  async get<T>(endpoint: string): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'GET',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    return response.json();
+  }
+
+  async post<T>(endpoint: string, data?: unknown): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    return response.json();
+  }
+
+  async put<T>(endpoint: string, data?: unknown): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'PUT',
+      headers: await this.getAuthHeaders(),
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    return response.json();
+  }
+
+  async delete<T>(endpoint: string): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'DELETE',
+      headers: await this.getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+    return response.json();
+  }
+}
+
+export const api = new ApiClient(API_URL);
+export { storage };
 ```
 
 **constants/theme.ts**
@@ -453,19 +597,100 @@ git commit -m "Initial project setup
 🤖 Generated with Claude Code"
 ```
 
+## Docker Setup
+
+**backend/Dockerfile**
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY app/ ./app/
+
+# Create non-root user for security
+RUN useradd --create-home appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import httpx; httpx.get('http://localhost:8000/health')" || exit 1
+
+# Run with production settings
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+**docker-compose.yml** (development)
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=true
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+    volumes:
+      - ./backend/app:/app/app  # Hot reload in dev
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+## Mandatory Tests per Feature
+
+Each feature implementation MUST include these tests:
+
+### Backend (minimum)
+```
+tests/
+├── test_[feature].py           # API integration tests
+└── test_services/
+    └── test_[feature]_service.py  # Service unit tests
+```
+
+### Mobile (minimum)
+```
+__tests__/
+├── stores/
+│   └── [feature].test.ts       # Zustand store tests
+└── services/
+    └── [feature].test.ts       # API service tests
+```
+
+### Test Requirements
+- [ ] **Happy path**: Main success scenario works
+- [ ] **Auth required**: Endpoints return 401 without token
+- [ ] **Validation**: Invalid input returns appropriate errors
+- [ ] **Error handling**: Service failures are handled gracefully
+
 ## First Feature Checklist
 
 After bootstrap, implement authentication:
 
-- [ ] Backend: Auth endpoints (register, login, logout)
+- [ ] Backend: Auth endpoints (register, login, logout) with rate limiting
 - [ ] Backend: JWT token generation & validation
 - [ ] Backend: Password hashing with bcrypt
 - [ ] Mobile: Login & Register screens
 - [ ] Mobile: Auth state management (Zustand)
 - [ ] Mobile: Secure token storage (SecureStore)
-- [ ] Tests: Auth flow (backend + mobile)
+- [ ] **Tests: Backend auth service + API tests**
+- [ ] **Tests: Mobile auth store + API tests**
 - [ ] Supabase: RLS policies for user data
 
 ---
 
-**Token Count**: ~1400 tokens | **Use once** at project start
+**Token Count**: ~2000 tokens | **Use once** at project start
