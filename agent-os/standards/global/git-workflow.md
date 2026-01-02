@@ -321,6 +321,83 @@ git push origin --delete release/v1.2.0
 
 ---
 
+## Pre-Push Test Report
+
+Before pushing commits, agents MUST run all tests and display a structured report. This ensures visibility on test status and prevents regressions.
+
+### Test Report Template
+
+```
+════════════════════════════════════════════════════════════════
+📊 COMPTE-RENDU DES TESTS AVANT PUSH
+════════════════════════════════════════════════════════════════
+
+BACKEND (Python/FastAPI):
+  ✅ XXX tests passés | ❌ X échecs | ⚠️ X warnings
+
+  Tests par module:
+    ├── test_routes/     ✅ XX tests
+    ├── test_services/   ✅ XX tests
+    └── test_utils/      ✅ XX tests
+
+MOBILE (React Native/Expo):
+  ✅ XX tests passés | ❌ X échecs | X suites
+
+  Tests par module:
+    ├── stores/          ✅ XX tests
+    ├── services/        ✅ XX tests
+    └── components/      ✅ XX tests
+
+════════════════════════════════════════════════════════════════
+🔄 TESTS DE NON-RÉGRESSION
+════════════════════════════════════════════════════════════════
+
+| Feature          | Commit origine | Tests | Statut |
+|------------------|----------------|-------|--------|
+| Authentication   | xxxxxxx        | XX    | ✅/❌  |
+| User Preferences | xxxxxxx        | XX    | ✅/❌  |
+| [Autre feature]  | xxxxxxx        | XX    | ✅/❌  |
+
+Régression: XX tests ✅ | Nouveaux: XX tests ✅
+
+════════════════════════════════════════════════════════════════
+RÉSUMÉ
+════════════════════════════════════════════════════════════════
+┌─────────────────────────────────────────────────────────────┐
+│  TOTAL: XXX tests | ✅ XXX passés | ❌ X échecs            │
+│  Régression: ✅ Aucune / ❌ Détectée                        │
+│  Prêt à push: ✅ OUI / ❌ NON                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### When to Block Push
+
+**❌ DO NOT PUSH if:**
+- Any test fails
+- Regression detected (previously passing test now fails)
+- Coverage dropped below threshold (80%)
+
+**✅ OK TO PUSH if:**
+- All tests pass
+- No regressions
+- Warnings are acceptable (deprecation notices, etc.)
+
+### Commands to Run
+
+```bash
+# Backend tests
+cd backend && uv run pytest tests/ -v --tb=short
+
+# Mobile tests
+cd mobile && npm test -- --verbose
+
+# With coverage
+cd backend && uv run pytest tests/ --cov=app --cov-fail-under=80
+cd mobile && npm test -- --coverage
+```
+
+---
+
 ## Git Hooks Integration
 
 This project may use Git hooks for automation. Agents should respect these hooks:
