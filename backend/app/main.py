@@ -10,6 +10,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.routes.auth import router as auth_router
+from app.routes.favorites import router as favorites_router
 from app.routes.profile import router as profile_router
 from app.routes.recipes import router as recipes_router
 from app.utils.rate_limiter import limiter
@@ -51,6 +52,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 # Include routers
 app.include_router(auth_router)
+app.include_router(favorites_router)
 app.include_router(profile_router)
 app.include_router(recipes_router)
 

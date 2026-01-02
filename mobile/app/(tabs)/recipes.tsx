@@ -21,11 +21,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useRecipesStore } from '../../stores/recipes';
+import { useFavoritesStore } from '../../stores/favorites';
+import { useAuthStore } from '../../stores/auth';
+import { FavoriteButton } from '../../components/recipes/FavoriteButton';
 import type { RecipeSummary, Category } from '../../types/recipe';
+import type { Favorite } from '../../types/favorite';
 
 export default function RecipesScreen() {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [showFavorites, setShowFavorites] = useState(false);
 
   const {
     recipes,
@@ -41,12 +46,27 @@ export default function RecipesScreen() {
     clearSearch,
   } = useRecipesStore();
 
+  const {
+    favorites,
+    isLoading: isFavoritesLoading,
+    fetchFavorites,
+  } = useFavoritesStore();
+
+  const { isAuthenticated } = useAuthStore();
+
   // Load categories on mount
   useEffect(() => {
     if (categories.length === 0) {
       fetchCategories();
     }
   }, [categories.length, fetchCategories]);
+
+  // Load favorites when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchFavorites();
+    }
+  }, [isAuthenticated, fetchFavorites]);
 
   // Select first category by default when categories are loaded
   useEffect(() => {
@@ -86,7 +106,24 @@ export default function RecipesScreen() {
   const handleClearSearch = useCallback(() => {
     setSearchText('');
     clearSearch();
+    setShowFavorites(false);
   }, [clearSearch]);
+
+  // Toggle favorites view
+  const handleToggleFavorites = useCallback(() => {
+    setShowFavorites((prev) => !prev);
+    if (!showFavorites) {
+      setSearchText('');
+    }
+  }, [showFavorites]);
+
+  // Handle favorite press - navigate to recipe detail
+  const handleFavoritePress = useCallback(
+    (favorite: Favorite) => {
+      router.push(`/recipe/${favorite.recipe_id}`);
+    },
+    [router]
+  );
 
   // Render category chip
   const renderCategory = ({ item }: { item: Category }) => (
@@ -118,7 +155,19 @@ export default function RecipesScreen() {
       onPress={() => handleRecipePress(item)}
       activeOpacity={0.8}
     >
-      <Image source={{ uri: item.thumbnail }} style={styles.recipeImage} />
+      <View style={styles.recipeImageContainer}>
+        <Image source={{ uri: item.thumbnail }} style={styles.recipeImage} />
+        {isAuthenticated && (
+          <FavoriteButton
+            recipeId={item.id}
+            recipeName={item.name}
+            recipeThumbnail={item.thumbnail}
+            size="small"
+            variant="overlay"
+            style={styles.favoriteButton}
+          />
+        )}
+      </View>
       <View style={styles.recipeInfo}>
         <Text style={styles.recipeName} numberOfLines={2}>
           {item.name}
@@ -127,9 +176,50 @@ export default function RecipesScreen() {
     </TouchableOpacity>
   );
 
+  // Render favorite card
+  const renderFavorite = ({ item }: { item: Favorite }) => (
+    <TouchableOpacity
+      style={styles.recipeCard}
+      onPress={() => handleFavoritePress(item)}
+      activeOpacity={0.8}
+    >
+      <View style={styles.recipeImageContainer}>
+        <Image
+          source={{ uri: item.recipe_thumbnail || undefined }}
+          style={styles.recipeImage}
+        />
+        <FavoriteButton
+          recipeId={item.recipe_id}
+          recipeName={item.recipe_name}
+          recipeThumbnail={item.recipe_thumbnail}
+          size="small"
+          variant="overlay"
+          style={styles.favoriteButton}
+        />
+      </View>
+      <View style={styles.recipeInfo}>
+        <Text style={styles.recipeName} numberOfLines={2}>
+          {item.recipe_name}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   // Empty state
   const renderEmpty = () => {
-    if (isLoading) return null;
+    if (isLoading || isFavoritesLoading) return null;
+
+    if (showFavorites) {
+      return (
+        <View style={styles.emptyState}>
+          <Ionicons name="heart-outline" size={48} color="#9CA3AF" />
+          <Text style={styles.emptyTitle}>Aucun favori</Text>
+          <Text style={styles.emptySubtitle}>
+            Ajoutez des recettes à vos favoris en appuyant sur le coeur
+          </Text>
+        </View>
+      );
+    }
 
     if (searchQuery || selectedCategory) {
       return (
@@ -159,6 +249,34 @@ export default function RecipesScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Recettes</Text>
+        {isAuthenticated && (
+          <TouchableOpacity
+            style={[
+              styles.favoritesToggle,
+              showFavorites && styles.favoritesToggleActive,
+            ]}
+            onPress={handleToggleFavorites}
+          >
+            <Ionicons
+              name={showFavorites ? 'heart' : 'heart-outline'}
+              size={20}
+              color={showFavorites ? '#EF4444' : '#6B7280'}
+            />
+            <Text
+              style={[
+                styles.favoritesToggleText,
+                showFavorites && styles.favoritesToggleTextActive,
+              ]}
+            >
+              Favoris
+            </Text>
+            {favorites.length > 0 && (
+              <View style={styles.favoritesBadge}>
+                <Text style={styles.favoritesBadgeText}>{favorites.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Search Bar */}
@@ -182,22 +300,24 @@ export default function RecipesScreen() {
         </View>
       </View>
 
-      {/* Categories */}
-      <View style={styles.categoriesSection}>
-        <Text style={styles.sectionTitle}>Catégories</Text>
-        {isCategoriesLoading ? (
-          <ActivityIndicator size="small" color="#14B8A6" />
-        ) : (
-          <FlatList
-            data={categories}
-            renderItem={renderCategory}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesList}
-          />
-        )}
-      </View>
+      {/* Categories - hide when showing favorites */}
+      {!showFavorites && (
+        <View style={styles.categoriesSection}>
+          <Text style={styles.sectionTitle}>Catégories</Text>
+          {isCategoriesLoading ? (
+            <ActivityIndicator size="small" color="#14B8A6" />
+          ) : (
+            <FlatList
+              data={categories}
+              renderItem={renderCategory}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesList}
+            />
+          )}
+        </View>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -206,38 +326,67 @@ export default function RecipesScreen() {
         </View>
       )}
 
-      {/* Recipe List */}
-      <View style={styles.recipesSection}>
-        {(searchQuery || selectedCategory) && (
+      {/* Favorites List */}
+      {showFavorites ? (
+        <View style={styles.recipesSection}>
           <View style={styles.resultsHeader}>
-            <Text style={styles.sectionTitle}>
-              {searchQuery
-                ? `Résultats pour "${searchQuery}"`
-                : `Recettes ${selectedCategory}`}
-            </Text>
+            <Text style={styles.sectionTitle}>Mes favoris</Text>
             <Text style={styles.resultsCount}>
-              {recipes.length} recette{recipes.length !== 1 ? 's' : ''}
+              {favorites.length} recette{favorites.length !== 1 ? 's' : ''}
             </Text>
           </View>
-        )}
 
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#14B8A6" />
-          </View>
-        ) : (
-          <FlatList
-            data={recipes}
-            renderItem={renderRecipe}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.recipeRow}
-            contentContainerStyle={styles.recipesList}
-            ListEmptyComponent={renderEmpty}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-      </View>
+          {isFavoritesLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#14B8A6" />
+            </View>
+          ) : (
+            <FlatList
+              data={favorites}
+              renderItem={renderFavorite}
+              keyExtractor={(item) => item.id}
+              numColumns={2}
+              columnWrapperStyle={styles.recipeRow}
+              contentContainerStyle={styles.recipesList}
+              ListEmptyComponent={renderEmpty}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </View>
+      ) : (
+        /* Recipe List */
+        <View style={styles.recipesSection}>
+          {(searchQuery || selectedCategory) && (
+            <View style={styles.resultsHeader}>
+              <Text style={styles.sectionTitle}>
+                {searchQuery
+                  ? `Résultats pour "${searchQuery}"`
+                  : `Recettes ${selectedCategory}`}
+              </Text>
+              <Text style={styles.resultsCount}>
+                {recipes.length} recette{recipes.length !== 1 ? 's' : ''}
+              </Text>
+            </View>
+          )}
+
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#14B8A6" />
+            </View>
+          ) : (
+            <FlatList
+              data={recipes}
+              renderItem={renderRecipe}
+              keyExtractor={(item) => item.id}
+              numColumns={2}
+              columnWrapperStyle={styles.recipeRow}
+              contentContainerStyle={styles.recipesList}
+              ListEmptyComponent={renderEmpty}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -248,6 +397,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 8,
@@ -256,6 +408,40 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: '#111827',
+  },
+  favoritesToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  favoritesToggleActive: {
+    backgroundColor: '#FEE2E2',
+  },
+  favoritesToggleText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  favoritesToggleTextActive: {
+    color: '#EF4444',
+  },
+  favoritesBadge: {
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  favoritesBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
   searchContainer: {
     paddingHorizontal: 24,
@@ -351,10 +537,18 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: 'hidden',
   },
+  recipeImageContainer: {
+    position: 'relative',
+  },
   recipeImage: {
     width: '100%',
     height: 120,
     backgroundColor: '#F3F4F6',
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
   },
   recipeInfo: {
     padding: 12,

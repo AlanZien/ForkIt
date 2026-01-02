@@ -1,13 +1,17 @@
 /**
  * API client for ForkIt backend
+ *
+ * Handles authenticated requests with automatic token refresh.
  */
 
-import { getTokens } from './secureStorage';
+import { getTokens, saveTokens } from './secureStorage';
+import { supabase } from './supabase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
 class ApiClient {
   private baseUrl: string;
+  private isRefreshing = false;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
@@ -26,62 +30,76 @@ class ApiClient {
     return headers;
   }
 
-  async get<T>(endpoint: string): Promise<T> {
+  private async refreshToken(): Promise<boolean> {
+    if (this.isRefreshing) return false;
+
+    this.isRefreshing = true;
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error || !data.session) {
+        return false;
+      }
+      await saveTokens(data.session.access_token, data.session.refresh_token);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      this.isRefreshing = false;
+    }
+  }
+
+  private async request<T>(
+    method: string,
+    endpoint: string,
+    data?: unknown,
+    retried = false
+  ): Promise<T> {
     const headers = await this.getAuthHeaders();
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'GET',
+    const options: RequestInit = {
+      method,
       headers,
-    });
+    };
+
+    if (data !== undefined) {
+      options.body = JSON.stringify(data);
+    }
+
+    const response = await fetch(`${this.baseUrl}${endpoint}`, options);
+
+    // Handle 401 - try to refresh token and retry once
+    if (response.status === 401 && !retried) {
+      const refreshed = await this.refreshToken();
+      if (refreshed) {
+        return this.request<T>(method, endpoint, data, true);
+      }
+    }
 
     if (!response.ok) {
       throw new Error(`API Error: ${response.status}`);
     }
 
+    // Handle 204 No Content responses
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
     return response.json();
+  }
+
+  async get<T>(endpoint: string): Promise<T> {
+    return this.request<T>('GET', endpoint);
   }
 
   async post<T>(endpoint: string, data: unknown): Promise<T> {
-    const headers = await this.getAuthHeaders();
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
-    }
-
-    return response.json();
+    return this.request<T>('POST', endpoint, data);
   }
 
   async put<T>(endpoint: string, data: unknown): Promise<T> {
-    const headers = await this.getAuthHeaders();
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
-    }
-
-    return response.json();
+    return this.request<T>('PUT', endpoint, data);
   }
 
   async delete<T>(endpoint: string): Promise<T> {
-    const headers = await this.getAuthHeaders();
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'DELETE',
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
-    }
-
-    return response.json();
+    return this.request<T>('DELETE', endpoint);
   }
 }
 

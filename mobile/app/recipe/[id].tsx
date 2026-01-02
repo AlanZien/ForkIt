@@ -20,6 +20,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useRecipesStore } from '../../stores/recipes';
+import { useAuthStore } from '../../stores/auth';
+import { FavoriteButton } from '../../components/recipes/FavoriteButton';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,6 +34,8 @@ export default function RecipeDetailScreen() {
     fetchRecipeDetails,
     clearSelectedRecipe,
   } = useRecipesStore();
+
+  const { isAuthenticated } = useAuthStore();
 
   // Fetch recipe details on mount
   useEffect(() => {
@@ -114,6 +118,16 @@ export default function RecipeDetailScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
+          {isAuthenticated && (
+            <FavoriteButton
+              recipeId={selectedRecipe.id}
+              recipeName={selectedRecipe.name}
+              recipeThumbnail={selectedRecipe.thumbnail}
+              size="large"
+              variant="overlay"
+              style={styles.favoriteButtonOverlay}
+            />
+          )}
         </View>
 
         {/* Content */}
@@ -276,6 +290,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  favoriteButtonOverlay: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
   },
   content: {
     paddingHorizontal: 24,
