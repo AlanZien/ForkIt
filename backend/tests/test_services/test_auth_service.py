@@ -3,8 +3,7 @@
 These tests mock Supabase to test the auth service logic.
 """
 
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -44,7 +43,9 @@ class MockSession:
 class MockAuthResponse:
     """Mock Supabase auth response."""
 
-    def __init__(self, user: MockUser | None = None, session: MockSession | None = None):
+    def __init__(
+        self, user: MockUser | None = None, session: MockSession | None = None
+    ):
         self.user = user
         self.session = session
 
@@ -82,9 +83,11 @@ class TestRegister:
 
     @patch("app.services.auth_service.get_supabase_admin")
     @patch("app.services.auth_service.get_supabase_client")
-    def test_register_with_duplicate_email_returns_generic_error(self, mock_get_client, mock_get_admin):
+    def test_register_with_duplicate_email_returns_generic_error(
+        self, mock_get_client, mock_get_admin
+    ):
         """Test that duplicate email returns generic error."""
-        from app.services.auth_service import AuthService, AuthError
+        from app.services.auth_service import AuthError, AuthService
 
         mock_client = MagicMock()
         mock_client.auth.sign_up.side_effect = Exception("User already registered")
@@ -111,7 +114,9 @@ class TestLogin:
 
     @patch("app.services.auth_service.get_supabase_admin")
     @patch("app.services.auth_service.get_supabase_client")
-    def test_login_with_valid_credentials_returns_tokens(self, mock_get_client, mock_get_admin):
+    def test_login_with_valid_credentials_returns_tokens(
+        self, mock_get_client, mock_get_admin
+    ):
         """Test that valid login returns tokens."""
         from app.services.auth_service import AuthService
 
@@ -142,9 +147,11 @@ class TestLogin:
 
     @patch("app.services.auth_service.get_supabase_admin")
     @patch("app.services.auth_service.get_supabase_client")
-    def test_login_with_invalid_credentials_returns_generic_error(self, mock_get_client, mock_get_admin):
+    def test_login_with_invalid_credentials_returns_generic_error(
+        self, mock_get_client, mock_get_admin
+    ):
         """Test that invalid credentials return generic error."""
-        from app.services.auth_service import AuthService, AuthError
+        from app.services.auth_service import AuthError, AuthService
 
         mock_client = MagicMock()
         mock_client.auth.sign_in_with_password.side_effect = Exception(
@@ -168,7 +175,9 @@ class TestLogin:
 
     @patch("app.services.auth_service.get_supabase_admin")
     @patch("app.services.auth_service.get_supabase_client")
-    def test_login_with_unverified_email_raises_error(self, mock_get_client, mock_get_admin):
+    def test_login_with_unverified_email_raises_error(
+        self, mock_get_client, mock_get_admin
+    ):
         """Test that unverified email raises appropriate error."""
         from app.services.auth_service import AuthService, EmailNotVerifiedError
 
@@ -200,7 +209,9 @@ class TestRefreshToken:
 
     @patch("app.services.auth_service.get_supabase_admin")
     @patch("app.services.auth_service.get_supabase_client")
-    def test_refresh_token_returns_new_access_token(self, mock_get_client, mock_get_admin):
+    def test_refresh_token_returns_new_access_token(
+        self, mock_get_client, mock_get_admin
+    ):
         """Test that refresh token returns new access token."""
         from app.services.auth_service import AuthService
 
@@ -244,7 +255,9 @@ class TestPasswordReset:
 
     @patch("app.services.auth_service.get_supabase_admin")
     @patch("app.services.auth_service.get_supabase_client")
-    def test_password_reset_for_nonexistent_email_returns_success(self, mock_get_client, mock_get_admin):
+    def test_password_reset_for_nonexistent_email_returns_success(
+        self, mock_get_client, mock_get_admin
+    ):
         """Test that password reset for unknown email doesn't reveal info."""
         from app.services.auth_service import AuthService
 
@@ -260,7 +273,9 @@ class TestPasswordReset:
 
     @patch("app.services.auth_service.get_supabase_admin")
     @patch("app.services.auth_service.get_supabase_client")
-    def test_password_reset_confirm_updates_password(self, mock_get_client, mock_get_admin):
+    def test_password_reset_confirm_updates_password(
+        self, mock_get_client, mock_get_admin
+    ):
         """Test that password reset confirm updates password."""
         from app.services.auth_service import AuthService
 

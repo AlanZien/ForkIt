@@ -44,7 +44,9 @@ class MockSession:
 class MockAuthResponse:
     """Mock auth response."""
 
-    def __init__(self, user: MockUser | None = None, session: MockSession | None = None):
+    def __init__(
+        self, user: MockUser | None = None, session: MockSession | None = None
+    ):
         self.user = user
         self.session = session
 
@@ -62,8 +64,12 @@ def client(mock_supabase):
     """Create test client with mocked dependencies."""
     mock_client, mock_admin = mock_supabase
 
-    with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-        with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+    with patch(
+        "app.services.auth_service.get_supabase_client", return_value=mock_client
+    ):
+        with patch(
+            "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+        ):
             from app.main import app
 
             yield TestClient(app)
@@ -78,8 +84,12 @@ class TestRegisterEndpoint:
         mock_user = MockUser(email="newuser@example.com")
         mock_client.auth.sign_up.return_value = MockAuthResponse(user=mock_user)
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -101,8 +111,12 @@ class TestRegisterEndpoint:
         """Test registration with invalid data returns 400."""
         mock_client, mock_admin = mock_supabase
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -122,8 +136,12 @@ class TestRegisterEndpoint:
         """Test registration with mismatched passwords returns 422."""
         mock_client, mock_admin = mock_supabase
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -152,8 +170,12 @@ class TestLoginEndpoint:
             user=mock_user, session=mock_session
         )
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -174,10 +196,16 @@ class TestLoginEndpoint:
     def test_login_returns_401_on_invalid_credentials(self, mock_supabase):
         """Test login with invalid credentials returns 401."""
         mock_client, mock_admin = mock_supabase
-        mock_client.auth.sign_in_with_password.side_effect = Exception("Invalid credentials")
+        mock_client.auth.sign_in_with_password.side_effect = Exception(
+            "Invalid credentials"
+        )
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -200,8 +228,12 @@ class TestLoginEndpoint:
             user=mock_user, session=mock_session
         )
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -229,8 +261,12 @@ class TestRefreshEndpoint:
             user=mock_user, session=mock_session
         )
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -252,8 +288,12 @@ class TestLogoutEndpoint:
         mock_client, mock_admin = mock_supabase
         mock_client.auth.sign_out.return_value = None
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -270,8 +310,12 @@ class TestPasswordResetEndpoint:
         mock_client, mock_admin = mock_supabase
         mock_client.auth.reset_password_for_email.return_value = None
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -284,12 +328,16 @@ class TestPasswordResetEndpoint:
         mock_client.auth.reset_password_for_email.assert_called_once()
 
     def test_password_reset_for_nonexistent_email_returns_success(self, mock_supabase):
-        """Test password reset for unknown email returns success (prevents enumeration)."""
+        """Test password reset for unknown email returns success."""
         mock_client, mock_admin = mock_supabase
         mock_client.auth.reset_password_for_email.return_value = None
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -313,8 +361,12 @@ class TestMeEndpoint:
         mock_response.user = mock_user
         mock_client.auth.get_user.return_value = mock_response
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -331,8 +383,12 @@ class TestMeEndpoint:
         """Test /me returns 401 without auth header."""
         mock_client, mock_admin = mock_supabase
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)
@@ -349,8 +405,12 @@ class TestResendVerificationEndpoint:
         mock_client, mock_admin = mock_supabase
         mock_client.auth.resend.return_value = None
 
-        with patch("app.services.auth_service.get_supabase_client", return_value=mock_client):
-            with patch("app.services.auth_service.get_supabase_admin", return_value=mock_admin):
+        with patch(
+            "app.services.auth_service.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.auth_service.get_supabase_admin", return_value=mock_admin
+            ):
                 from app.main import app
 
                 client = TestClient(app)

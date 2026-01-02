@@ -4,9 +4,7 @@ These tests define the expected behavior of the security module.
 They should be written BEFORE the implementation.
 """
 
-import time
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 
@@ -159,9 +157,10 @@ class TestJWTTokens:
             decode_token(token)
 
         # Should raise an exception related to token expiration
-        assert "expired" in str(exc_info.value).lower() or "exp" in str(
-            exc_info.value
-        ).lower()
+        assert (
+            "expired" in str(exc_info.value).lower()
+            or "exp" in str(exc_info.value).lower()
+        )
 
     def test_decode_token_with_invalid_token(self):
         """Test that decode_token raises exception for invalid token."""

@@ -41,7 +41,7 @@ class TestGetPreferences:
         """Test that get_preferences returns all preferences for a user.
 
         Given: User authenticated with user_id = "user-123"
-               User has 2 dietary preferences, 3 allergies, 5 excluded, 3 preferred, portions=4
+               User has 2 dietary prefs, 3 allergies, 5 excluded, 3 preferred
         When: get_preferences(user_id)
         Then: Returns UserPreferencesResponse with all data
         Requirement: spec.md "Architecture API Backend > GET /api/profile/preferences"
@@ -95,9 +95,9 @@ class TestGetPreferences:
             {"ingredient_name": "romarin"},
         ]
         mock_preferred_query = MagicMock()
-        mock_preferred_query.select.return_value.eq.return_value.execute.return_value = (
-            MockSupabaseResponse(data=preferred_data)
-        )
+        preferred_response = MockSupabaseResponse(data=preferred_data)
+        preferred_chain = mock_preferred_query.select.return_value.eq.return_value
+        preferred_chain.execute.return_value = preferred_response
 
         # Mock user settings query
         settings_data = [{"portions_count": 4}]
@@ -141,7 +141,7 @@ class TestGetPreferences:
 
         Given: User authenticated without any preferences configured
         When: get_preferences(user_id)
-        Then: Returns UserPreferencesResponse with empty lists and default portions_count
+        Then: Returns UserPreferencesResponse with empty lists and defaults
         Requirement: spec.md "Architecture API Backend > GET preferences"
         Test-plan: test_get_preferences_new_user_returns_empty_defaults (#24)
         """
@@ -201,9 +201,9 @@ class TestGetPreferences:
         )
 
         mock_preferred_query = MagicMock()
-        mock_preferred_query.select.return_value.eq.return_value.execute.return_value = (
-            MockSupabaseResponse(data=[])
-        )
+        empty_response = MockSupabaseResponse(data=[])
+        preferred_chain = mock_preferred_query.select.return_value.eq.return_value
+        preferred_chain.execute.return_value = empty_response
 
         mock_settings_query = MagicMock()
         mock_settings_query.select.return_value.eq.return_value.execute.return_value = (
@@ -295,8 +295,8 @@ class TestUpdatePreferences:
         Given: Payload with dietary_preferences: ["vegan", "pescetarian"]
         When: Creating UserPreferencesUpdate
         Then: Raises ValidationError
-        Requirement: spec.md "Gestion des regimes > Vegetalien incompatible avec Pescetarien"
-        Test-plan: test_update_dietary_preferences_incompatibility_vegetalien_pescetarien (#33)
+        Requirement: spec.md "Gestion des regimes > Vegetalien vs Pescetarien"
+        Test-plan: test_update_dietary_incompatibility_vegan_pescetarian (#33)
         """
         from pydantic import ValidationError
 
@@ -319,8 +319,8 @@ class TestUpdatePreferences:
         Given: Payload with dietary_preferences: ["vegan", "no_beef"]
         When: Creating UserPreferencesUpdate
         Then: Raises ValidationError
-        Requirement: spec.md "Gestion des regimes > Vegetalien incompatible avec Sans boeuf"
-        Test-plan: test_update_dietary_preferences_incompatibility_vegetalien_sans_boeuf (#34)
+        Requirement: spec.md "Gestion des regimes > Vegetalien vs Sans boeuf"
+        Test-plan: test_update_dietary_incompatibility_vegan_no_beef (#34)
         """
         from pydantic import ValidationError
 
@@ -342,8 +342,8 @@ class TestUpdatePreferences:
         Given: Payload with dietary_preferences: ["vegan", "no_pork"]
         When: Creating UserPreferencesUpdate
         Then: Raises ValidationError
-        Requirement: spec.md "Gestion des regimes > Vegetalien incompatible avec Sans porc"
-        Test-plan: test_update_dietary_preferences_incompatibility_vegetalien_sans_porc (#35)
+        Requirement: spec.md "Gestion des regimes > Vegetalien vs Sans porc"
+        Test-plan: test_update_dietary_incompatibility_vegan_no_pork (#35)
         """
         from pydantic import ValidationError
 
@@ -368,8 +368,8 @@ class TestUpdatePreferences:
         Given: Payload with dietary_preferences: ["halal", "kosher"]
         When: update_preferences(user_id, data)
         Then: Status 200 (allowed), response includes warning message
-        Requirement: spec.md "Gestion des regimes > Halal + Casher: avertissement non-bloquant"
-        Test-plan: test_update_dietary_preferences_halal_casher_warning_but_allowed (#36)
+        Requirement: spec.md "Gestion des regimes > Halal + Casher: warning"
+        Test-plan: test_update_dietary_halal_kosher_warning (#36)
         """
         from app.services.preferences_service import PreferencesService
 
@@ -408,7 +408,10 @@ class TestUpdatePreferences:
         assert DietaryType.HALAL in result.dietary_preferences
         assert DietaryType.KOSHER in result.dietary_preferences
         assert result.warning is not None
-        assert "coherence" in result.warning.lower() or "combination" in result.warning.lower()
+        assert (
+            "coherence" in result.warning.lower()
+            or "combination" in result.warning.lower()
+        )
 
     @patch("app.services.preferences_service.get_supabase_admin")
     def test_update_ingredients_normalization(self, mock_get_client):
@@ -417,7 +420,7 @@ class TestUpdatePreferences:
         Given: Payload with excluded_ingredients: ["  TOMATE  ", "Oignon"]
         When: update_preferences(user_id, data)
         Then: Ingredients stored as ["tomate", "oignon"]
-        Requirement: spec.md "Gestion des ingredients > Normalisation automatique: trim() + lowercase"
+        Requirement: spec.md "Gestion des ingredients > Normalisation auto"
         Test-plan: test_update_ingredients_normalization (#42)
         """
         from app.services.preferences_service import PreferencesService
@@ -520,7 +523,7 @@ class TestValidateDietaryIncompatibilities:
         Given: VEGAN selected
         When: Attempting to add PESCETARIAN, NO_BEEF, or NO_PORK
         Then: ValidationError raised
-        Requirement: spec.md "Si VEGAN: desactiver automatiquement PESCETARIAN, NO_BEEF, NO_PORK"
+        Requirement: spec.md "Si VEGAN: desactiver PESCETARIAN, NO_BEEF, NO_PORK"
         """
         from pydantic import ValidationError
 

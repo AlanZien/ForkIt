@@ -68,7 +68,10 @@ def create_table_mock_for_get(mock_client, mock_auth_user):
     mock_dietary_response.data = [{"dietary_type": "vegetarian"}]
 
     mock_allergy_response = MagicMock()
-    mock_allergy_response.data = [{"allergy_type": "gluten"}, {"allergy_type": "lactose"}]
+    mock_allergy_response.data = [
+        {"allergy_type": "gluten"},
+        {"allergy_type": "lactose"},
+    ]
 
     mock_excluded_response = MagicMock()
     mock_excluded_response.data = [{"ingredient_name": "cilantro"}]
@@ -126,7 +129,9 @@ def create_table_mock_for_update(mock_client):
 class TestGetPreferencesEndpoint:
     """Tests for GET /api/profile/preferences."""
 
-    def test_get_preferences_returns_200_with_preferences(self, mock_supabase_client, mock_auth_user):
+    def test_get_preferences_returns_200_with_preferences(
+        self, mock_supabase_client, mock_auth_user
+    ):
         """Test GET /api/profile/preferences returns 200 with user preferences."""
         mock_client = mock_supabase_client
 
@@ -138,13 +143,19 @@ class TestGetPreferencesEndpoint:
         # Setup table mocking for preferences
         create_table_mock_for_get(mock_client, mock_auth_user)
 
-        with patch("app.services.supabase.get_supabase_client", return_value=mock_client):
-            with patch("app.services.supabase.get_supabase_admin", return_value=mock_client):
+        with patch(
+            "app.services.supabase.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.supabase.get_supabase_admin", return_value=mock_client
+            ):
                 # Force reimport to use patched modules
                 import importlib
+
+                import app.main
                 import app.services.auth_service
                 import app.services.preferences_service
-                import app.main
+
                 importlib.reload(app.services.auth_service)
                 importlib.reload(app.services.preferences_service)
                 importlib.reload(app.main)
@@ -171,11 +182,17 @@ class TestGetPreferencesEndpoint:
         """Test GET /api/profile/preferences returns 401 without authentication."""
         mock_client = mock_supabase_client
 
-        with patch("app.services.supabase.get_supabase_client", return_value=mock_client):
-            with patch("app.services.supabase.get_supabase_admin", return_value=mock_client):
+        with patch(
+            "app.services.supabase.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.supabase.get_supabase_admin", return_value=mock_client
+            ):
                 import importlib
-                import app.services.auth_service
+
                 import app.main
+                import app.services.auth_service
+
                 importlib.reload(app.services.auth_service)
                 importlib.reload(app.main)
 
@@ -194,11 +211,17 @@ class TestGetPreferencesEndpoint:
         # Mock auth to return None (invalid token)
         mock_client.auth.get_user.return_value = MagicMock(user=None)
 
-        with patch("app.services.supabase.get_supabase_client", return_value=mock_client):
-            with patch("app.services.supabase.get_supabase_admin", return_value=mock_client):
+        with patch(
+            "app.services.supabase.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.supabase.get_supabase_admin", return_value=mock_client
+            ):
                 import importlib
-                import app.services.auth_service
+
                 import app.main
+                import app.services.auth_service
+
                 importlib.reload(app.services.auth_service)
                 importlib.reload(app.main)
 
@@ -216,7 +239,9 @@ class TestGetPreferencesEndpoint:
 class TestUpdatePreferencesEndpoint:
     """Tests for PUT /api/profile/preferences."""
 
-    def test_put_preferences_updates_correctly(self, mock_supabase_client, mock_auth_user):
+    def test_put_preferences_updates_correctly(
+        self, mock_supabase_client, mock_auth_user
+    ):
         """Test PUT /api/profile/preferences updates preferences correctly."""
         mock_client = mock_supabase_client
 
@@ -228,12 +253,18 @@ class TestUpdatePreferencesEndpoint:
         # Setup table mocking for update operations
         create_table_mock_for_update(mock_client)
 
-        with patch("app.services.supabase.get_supabase_client", return_value=mock_client):
-            with patch("app.services.supabase.get_supabase_admin", return_value=mock_client):
+        with patch(
+            "app.services.supabase.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.supabase.get_supabase_admin", return_value=mock_client
+            ):
                 import importlib
+
+                import app.main
                 import app.services.auth_service
                 import app.services.preferences_service
-                import app.main
+
                 importlib.reload(app.services.auth_service)
                 importlib.reload(app.services.preferences_service)
                 importlib.reload(app.main)
@@ -261,8 +292,10 @@ class TestUpdatePreferencesEndpoint:
         assert data["preferred_ingredients"] == ["tomato"]
         assert data["portions_count"] == 4
 
-    def test_put_preferences_returns_422_on_incompatibilities(self, mock_supabase_client, mock_auth_user):
-        """Test PUT /api/profile/preferences returns 422 when dietary incompatibilities detected."""
+    def test_put_preferences_returns_422_on_incompatibilities(
+        self, mock_supabase_client, mock_auth_user
+    ):
+        """Test PUT preferences returns 422 on dietary incompatibilities."""
         mock_client = mock_supabase_client
 
         # Mock auth user response
@@ -270,12 +303,18 @@ class TestUpdatePreferencesEndpoint:
         mock_user_response.user = mock_auth_user
         mock_client.auth.get_user.return_value = mock_user_response
 
-        with patch("app.services.supabase.get_supabase_client", return_value=mock_client):
-            with patch("app.services.supabase.get_supabase_admin", return_value=mock_client):
+        with patch(
+            "app.services.supabase.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.supabase.get_supabase_admin", return_value=mock_client
+            ):
                 import importlib
+
+                import app.main
                 import app.services.auth_service
                 import app.services.preferences_service
-                import app.main
+
                 importlib.reload(app.services.auth_service)
                 importlib.reload(app.services.preferences_service)
                 importlib.reload(app.main)
@@ -301,8 +340,10 @@ class TestUpdatePreferencesEndpoint:
         data = response.json()
         assert "detail" in data
 
-    def test_put_preferences_returns_422_on_too_many_ingredients(self, mock_supabase_client, mock_auth_user):
-        """Test PUT /api/profile/preferences returns 422 when more than 30 ingredients."""
+    def test_put_preferences_returns_422_on_too_many_ingredients(
+        self, mock_supabase_client, mock_auth_user
+    ):
+        """Test PUT preferences returns 422 when >30 ingredients."""
         mock_client = mock_supabase_client
 
         # Mock auth user response
@@ -313,12 +354,18 @@ class TestUpdatePreferencesEndpoint:
         # Create list of 31 ingredients
         too_many_ingredients = [f"ingredient_{i}" for i in range(31)]
 
-        with patch("app.services.supabase.get_supabase_client", return_value=mock_client):
-            with patch("app.services.supabase.get_supabase_admin", return_value=mock_client):
+        with patch(
+            "app.services.supabase.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.supabase.get_supabase_admin", return_value=mock_client
+            ):
                 import importlib
+
+                import app.main
                 import app.services.auth_service
                 import app.services.preferences_service
-                import app.main
+
                 importlib.reload(app.services.auth_service)
                 importlib.reload(app.services.preferences_service)
                 importlib.reload(app.main)
@@ -345,11 +392,17 @@ class TestUpdatePreferencesEndpoint:
         """Test PUT /api/profile/preferences returns 401 without authentication."""
         mock_client = mock_supabase_client
 
-        with patch("app.services.supabase.get_supabase_client", return_value=mock_client):
-            with patch("app.services.supabase.get_supabase_admin", return_value=mock_client):
+        with patch(
+            "app.services.supabase.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.supabase.get_supabase_admin", return_value=mock_client
+            ):
                 import importlib
-                import app.services.auth_service
+
                 import app.main
+                import app.services.auth_service
+
                 importlib.reload(app.services.auth_service)
                 importlib.reload(app.main)
 
@@ -369,8 +422,10 @@ class TestUpdatePreferencesEndpoint:
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_put_preferences_returns_warning_for_halal_kosher(self, mock_supabase_client, mock_auth_user):
-        """Test PUT /api/profile/preferences returns warning when halal + kosher selected."""
+    def test_put_preferences_returns_warning_for_halal_kosher(
+        self, mock_supabase_client, mock_auth_user
+    ):
+        """Test PUT preferences returns warning for halal+kosher."""
         mock_client = mock_supabase_client
 
         # Mock auth user response
@@ -381,12 +436,18 @@ class TestUpdatePreferencesEndpoint:
         # Setup table mocking for update operations
         create_table_mock_for_update(mock_client)
 
-        with patch("app.services.supabase.get_supabase_client", return_value=mock_client):
-            with patch("app.services.supabase.get_supabase_admin", return_value=mock_client):
+        with patch(
+            "app.services.supabase.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.supabase.get_supabase_admin", return_value=mock_client
+            ):
                 import importlib
+
+                import app.main
                 import app.services.auth_service
                 import app.services.preferences_service
-                import app.main
+
                 importlib.reload(app.services.auth_service)
                 importlib.reload(app.services.preferences_service)
                 importlib.reload(app.main)
@@ -409,10 +470,15 @@ class TestUpdatePreferencesEndpoint:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["warning"] is not None
-        assert "coherence" in data["warning"].lower() or "combination" in data["warning"].lower()
+        assert (
+            "coherence" in data["warning"].lower()
+            or "combination" in data["warning"].lower()
+        )
 
-    def test_put_preferences_normalizes_ingredients(self, mock_supabase_client, mock_auth_user):
-        """Test PUT /api/profile/preferences normalizes ingredient names (lowercase, trim)."""
+    def test_put_preferences_normalizes_ingredients(
+        self, mock_supabase_client, mock_auth_user
+    ):
+        """Test PUT preferences normalizes ingredients (lowercase, trim)."""
         mock_client = mock_supabase_client
 
         # Mock auth user response
@@ -423,12 +489,18 @@ class TestUpdatePreferencesEndpoint:
         # Setup table mocking for update operations
         create_table_mock_for_update(mock_client)
 
-        with patch("app.services.supabase.get_supabase_client", return_value=mock_client):
-            with patch("app.services.supabase.get_supabase_admin", return_value=mock_client):
+        with patch(
+            "app.services.supabase.get_supabase_client", return_value=mock_client
+        ):
+            with patch(
+                "app.services.supabase.get_supabase_admin", return_value=mock_client
+            ):
                 import importlib
+
+                import app.main
                 import app.services.auth_service
                 import app.services.preferences_service
-                import app.main
+
                 importlib.reload(app.services.auth_service)
                 importlib.reload(app.services.preferences_service)
                 importlib.reload(app.main)
