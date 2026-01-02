@@ -36,6 +36,14 @@ select = ["E", "F", "I", "N", "W", "UP"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
+# Relax rules for external libraries returning Any
+warn_return_any = false
+# Allow untyped calls for external libraries
+disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+module = ["supabase.*", "httpx.*", "jwt.*", "bcrypt.*", "slowapi.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

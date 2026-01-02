@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class AuthError(Exception):
     """Base authentication error with generic message."""
 
-    def __init__(self, message: str = "Authentication failed"):
+    def __init__(self, message: str = "Authentication failed") -> None:
         self.message = message
         super().__init__(self.message)
 
@@ -28,14 +28,14 @@ class AuthError(Exception):
 class EmailNotVerifiedError(AuthError):
     """Raised when user's email is not verified."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("Email verification required")
 
 
 class AuthService:
     """Service for authentication operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize auth service."""
         self.client = get_supabase_client()
         self.admin_client = get_supabase_admin()
@@ -76,7 +76,7 @@ class AuthService:
             return UserResponse(
                 id=response.user.id,
                 name=response.user.user_metadata.get("name"),
-                email=response.user.email,
+                email=response.user.email or "",
                 email_verified=response.user.email_confirmed_at is not None,
                 created_at=created_at,
             )
@@ -123,7 +123,7 @@ class AuthService:
             user = UserResponse(
                 id=response.user.id,
                 name=response.user.user_metadata.get("name"),
-                email=response.user.email,
+                email=response.user.email or "",
                 email_verified=True,
                 created_at=created_at,
             )
@@ -168,7 +168,7 @@ class AuthService:
             user = UserResponse(
                 id=response.user.id,
                 name=response.user.user_metadata.get("name"),
-                email=response.user.email,
+                email=response.user.email or "",
                 email_verified=response.user.email_confirmed_at is not None,
                 created_at=created_at,
             )
@@ -238,20 +238,21 @@ class AuthService:
         """
         try:
             response = self.client.auth.get_user(access_token)
+            user = response.user  # type: ignore[union-attr]
 
-            if not response.user:
+            if not user:
                 return None
 
             # Handle created_at - may be datetime or string
-            created_at = response.user.created_at
+            created_at = user.created_at
             if isinstance(created_at, str):
                 created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
 
             return UserResponse(
-                id=response.user.id,
-                name=response.user.user_metadata.get("name"),
-                email=response.user.email,
-                email_verified=response.user.email_confirmed_at is not None,
+                id=user.id,
+                name=user.user_metadata.get("name"),
+                email=user.email or "",
+                email_verified=user.email_confirmed_at is not None,
                 created_at=created_at,
             )
 

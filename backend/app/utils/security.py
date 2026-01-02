@@ -42,9 +42,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     )
 
 
-def create_access_token(
-    user_id: str, expires_delta: timedelta | None = None
-) -> str:
+def create_access_token(user_id: str, expires_delta: timedelta | None = None) -> str:
     """Create a JWT access token.
 
     Args:
@@ -71,9 +69,7 @@ def create_access_token(
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
-def create_refresh_token(
-    user_id: str, expires_delta: timedelta | None = None
-) -> str:
+def create_refresh_token(user_id: str, expires_delta: timedelta | None = None) -> str:
     """Create a JWT refresh token.
 
     Args:
@@ -100,7 +96,7 @@ def create_refresh_token(
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
-def decode_token(token: str) -> dict:
+def decode_token(token: str) -> dict[str, str | int]:
     """Decode and verify a JWT token.
 
     Args:
@@ -113,6 +109,4 @@ def decode_token(token: str) -> dict:
         jwt.ExpiredSignatureError: If token has expired.
         jwt.InvalidTokenError: If token is invalid.
     """
-    return jwt.decode(
-        token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
-    )
+    return jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])

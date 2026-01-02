@@ -4,6 +4,7 @@ Handles all user preferences operations with Supabase.
 """
 
 import logging
+from typing import Any, cast
 
 from app.models.preferences import (
     AllergyType,
@@ -34,7 +35,7 @@ class PreferencesValidationError(PreferencesError):
 class PreferencesService:
     """Service for user preferences operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize preferences service."""
         self.client = get_supabase_admin()
 
@@ -58,8 +59,9 @@ class PreferencesService:
                 .eq("user_id", user_id)
                 .execute()
             )
+            dietary_data = cast(list[dict[str, Any]], dietary_response.data)
             dietary_preferences = [
-                DietaryType(item["dietary_type"]) for item in dietary_response.data
+                DietaryType(item["dietary_type"]) for item in dietary_data
             ]
 
             # Fetch allergies
@@ -69,9 +71,8 @@ class PreferencesService:
                 .eq("user_id", user_id)
                 .execute()
             )
-            allergies = [
-                AllergyType(item["allergy_type"]) for item in allergy_response.data
-            ]
+            allergy_data = cast(list[dict[str, Any]], allergy_response.data)
+            allergies = [AllergyType(item["allergy_type"]) for item in allergy_data]
 
             # Fetch excluded ingredients
             excluded_response = (
@@ -80,8 +81,9 @@ class PreferencesService:
                 .eq("user_id", user_id)
                 .execute()
             )
-            excluded_ingredients = [
-                item["ingredient_name"] for item in excluded_response.data
+            excluded_data = cast(list[dict[str, Any]], excluded_response.data)
+            excluded_ingredients: list[str] = [
+                item["ingredient_name"] for item in excluded_data
             ]
 
             # Fetch preferred ingredients
@@ -91,8 +93,9 @@ class PreferencesService:
                 .eq("user_id", user_id)
                 .execute()
             )
-            preferred_ingredients = [
-                item["ingredient_name"] for item in preferred_response.data
+            preferred_data = cast(list[dict[str, Any]], preferred_response.data)
+            preferred_ingredients: list[str] = [
+                item["ingredient_name"] for item in preferred_data
             ]
 
             # Fetch user settings (portions_count)
@@ -102,9 +105,10 @@ class PreferencesService:
                 .eq("user_id", user_id)
                 .execute()
             )
-            portions_count = (
-                settings_response.data[0]["portions_count"]
-                if settings_response.data
+            settings_data = cast(list[dict[str, Any]], settings_response.data)
+            portions_count: int = (
+                settings_data[0]["portions_count"]
+                if settings_data
                 else 2  # Default value
             )
 

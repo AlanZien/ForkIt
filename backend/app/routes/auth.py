@@ -180,7 +180,7 @@ def request_password_reset(
     request: Request,
     data: PasswordResetRequest,
     auth_service: AuthService = Depends(get_auth_service),
-) -> dict:
+) -> dict[str, str]:
     """Request password reset email.
 
     Always returns success to prevent email enumeration.
@@ -216,7 +216,7 @@ def resend_verification(
     request: Request,
     data: PasswordResetRequest,
     auth_service: AuthService = Depends(get_auth_service),
-) -> dict:
+) -> dict[str, str]:
     """Resend verification email.
 
     Args:
