@@ -14,6 +14,7 @@ from app.routes.favorites import router as favorites_router
 from app.routes.meal_slots import router as meal_slots_router
 from app.routes.profile import router as profile_router
 from app.routes.recipes import router as recipes_router
+from app.routes.shopping_list import router as shopping_list_router
 from app.utils.rate_limiter import limiter
 
 # Set logging level based on debug mode
@@ -57,6 +58,7 @@ app.include_router(favorites_router)
 app.include_router(meal_slots_router)
 app.include_router(profile_router)
 app.include_router(recipes_router)
+app.include_router(shopping_list_router)
 
 
 @app.get("/")

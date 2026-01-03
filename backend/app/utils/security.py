@@ -3,7 +3,7 @@
 Provides password hashing and JWT token management.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import bcrypt
 import jwt
@@ -52,7 +52,7 @@ def create_access_token(user_id: str, expires_delta: timedelta | None = None) ->
     Returns:
         Encoded JWT access token string.
     """
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
 
     if expires_delta is None:
         expires_delta = timedelta(minutes=settings.jwt_access_expiry_minutes)
@@ -79,7 +79,7 @@ def create_refresh_token(user_id: str, expires_delta: timedelta | None = None) -
     Returns:
         Encoded JWT refresh token string.
     """
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
 
     if expires_delta is None:
         expires_delta = timedelta(days=settings.jwt_refresh_expiry_days)

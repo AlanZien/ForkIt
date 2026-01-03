@@ -4,7 +4,7 @@ Defines request/response schemas for user dietary preferences, allergies,
 excluded/preferred ingredients, and portions settings.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Annotated
 from uuid import uuid4
@@ -63,7 +63,7 @@ def normalize_ingredient(value: str) -> str:
 
 def utc_now() -> datetime:
     """Return current UTC datetime (timezone-aware)."""
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 class UserDietaryPreference(BaseModel):

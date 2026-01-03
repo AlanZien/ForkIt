@@ -1,24 +1,178 @@
 /**
  * Shopping List Screen
  *
- * Auto-generated shopping list from meal planning
+ * Displays the shopping list generated from the weekly meal plan.
+ * Features:
+ * - Grouped items by category
+ * - Collapsible sections
+ * - Check/uncheck items with optimistic updates
+ * - Regenerate list functionality
  */
 
-import { View, Text, StyleSheet } from 'react-native';
+import { useEffect, useCallback, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
+import { useAuthStore } from '../../stores/auth';
+import { useShoppingListStore } from '../../stores/shopping-list';
+import {
+  CategorySection,
+  EmptyState,
+  ListHeader,
+} from '../../components/shopping-list';
 
 export default function ShoppingScreen() {
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Courses</Text>
-      </View>
+  const { isAuthenticated } = useAuthStore();
+  const [refreshing, setRefreshing] = useState(false);
 
-      <View style={styles.content}>
-        <Text style={styles.placeholder}>
-          Votre liste de courses apparaîtra ici
-        </Text>
-      </View>
+  const {
+    items,
+    isLoading,
+    isGenerating,
+    error,
+    lastGeneratedAt,
+    currentWeekStart,
+    fetchList,
+    generateList,
+    toggleItem,
+    uncheckAll,
+    getItemsByCategory,
+  } = useShoppingListStore();
+
+  // Fetch list when screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        fetchList();
+      }
+    }, [isAuthenticated, fetchList])
+  );
+
+  // Handle pull-to-refresh
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchList();
+    setRefreshing(false);
+  }, [fetchList]);
+
+  // Handle generate list
+  const handleGenerateList = useCallback(async () => {
+    try {
+      await generateList();
+    } catch {
+      Alert.alert('Erreur', 'Impossible de generer la liste. Veuillez reessayer.');
+    }
+  }, [generateList]);
+
+  // Handle regenerate with confirmation
+  const handleRegenerate = useCallback(() => {
+    Alert.alert(
+      'Regenerer la liste ?',
+      'Cette action effacera les elements coches.',
+      [
+        {
+          text: 'Annuler',
+          style: 'cancel',
+        },
+        {
+          text: 'Regenerer',
+          style: 'destructive',
+          onPress: handleGenerateList,
+        },
+      ]
+    );
+  }, [handleGenerateList]);
+
+  // Handle toggle item
+  const handleToggleItem = useCallback(
+    async (id: string) => {
+      try {
+        await toggleItem(id);
+      } catch {
+        // Error handled by store, item rolls back automatically
+      }
+    },
+    [toggleItem]
+  );
+
+  // Handle uncheck all
+  const handleUncheckAll = useCallback(async () => {
+    try {
+      await uncheckAll();
+    } catch {
+      Alert.alert('Erreur', 'Impossible de decocher les elements.');
+    }
+  }, [uncheckAll]);
+
+  // Get grouped items
+  const categoryGroups = getItemsByCategory();
+  const totalItems = items.size;
+  const checkedCount = Array.from(items.values()).filter((item) => item.is_checked)
+    .length;
+
+  // Loading state
+  if (isLoading && !refreshing && totalItems === 0) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#14B8A6" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Empty state
+  if (totalItems === 0 && !isLoading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <EmptyState onGenerateList={handleGenerateList} isLoading={isGenerating} />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header with progress and actions */}
+      <ListHeader
+        weekStart={currentWeekStart}
+        totalItems={totalItems}
+        checkedCount={checkedCount}
+        lastGeneratedAt={lastGeneratedAt}
+        onUncheckAll={handleUncheckAll}
+        onRegenerate={handleRegenerate}
+        isGenerating={isGenerating}
+      />
+
+      {/* Scrollable list */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#14B8A6"
+            colors={['#14B8A6']}
+          />
+        }
+      >
+        {categoryGroups.map((group) => (
+          <CategorySection
+            key={group.category}
+            category={group.category}
+            items={group.items}
+            onToggleItem={handleToggleItem}
+          />
+        ))}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -26,27 +180,18 @@ export default function ShoppingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
   },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  content: {
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
   },
-  placeholder: {
-    fontSize: 16,
-    color: '#9CA3AF',
-    textAlign: 'center',
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 32,
   },
 });
