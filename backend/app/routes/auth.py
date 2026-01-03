@@ -75,6 +75,35 @@ def get_current_user(
     return user
 
 
+def get_optional_user(
+    authorization: str | None = Header(None, alias="Authorization"),
+    auth_service: AuthService = Depends(get_auth_service),
+) -> UserResponse | None:
+    """Dependency to get current user if authenticated, None otherwise.
+
+    Does NOT raise HTTPException if not authenticated.
+
+    Args:
+        authorization: Authorization header with Bearer token.
+        auth_service: Auth service instance.
+
+    Returns:
+        Current user info or None if not authenticated.
+    """
+    if not authorization:
+        return None
+
+    # Extract token from "Bearer <token>"
+    try:
+        scheme, token = authorization.split(" ", 1)
+        if scheme.lower() != "bearer":
+            return None
+    except ValueError:
+        return None
+
+    return auth_service.get_user(token)
+
+
 @router.post(
     "/register", status_code=status.HTTP_201_CREATED, response_model=UserResponse
 )
