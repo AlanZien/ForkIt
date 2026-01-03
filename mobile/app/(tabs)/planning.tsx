@@ -2,7 +2,7 @@
  * Planning Screen
  *
  * Weekly meal planning view with navigation between weeks.
- * Allows users to add, view, replace, and delete recipes in meal slots.
+ * Allows users to add, view, replace, edit portions, and delete recipes in meal slots.
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -18,6 +18,7 @@ import {
   WeekView,
   RecipeSelectionModal,
   SlotActionMenu,
+  EditPortionsModal,
 } from '../../components/meal-planning';
 import type { MealSlot, MealType } from '../../types/meal-slot';
 
@@ -36,6 +37,7 @@ export default function PlanningScreen() {
     currentWeekStart,
     fetchWeek,
     addSlot,
+    updateSlot,
     removeSlot,
     navigateWeek,
     canNavigatePrev,
@@ -46,6 +48,7 @@ export default function PlanningScreen() {
   // Modal states
   const [isSelectionModalVisible, setIsSelectionModalVisible] = useState(false);
   const [isActionMenuVisible, setIsActionMenuVisible] = useState(false);
+  const [isEditPortionsModalVisible, setIsEditPortionsModalVisible] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlotState | null>(null);
 
   // Fetch current week on mount and when authenticated
@@ -125,6 +128,31 @@ export default function PlanningScreen() {
     setIsSelectionModalVisible(true);
   }, []);
 
+  // Handle edit portions action
+  const handleEditPortions = useCallback(() => {
+    setIsActionMenuVisible(false);
+    setIsEditPortionsModalVisible(true);
+  }, []);
+
+  // Handle confirm portions update
+  const handleConfirmPortions = useCallback(
+    async (newPortions: number) => {
+      if (!selectedSlot) return;
+
+      try {
+        await updateSlot(selectedSlot.date, selectedSlot.mealType, {
+          portions: newPortions,
+        });
+      } catch {
+        // Error is handled by the store
+      }
+
+      setIsEditPortionsModalVisible(false);
+      setSelectedSlot(null);
+    },
+    [selectedSlot, updateSlot]
+  );
+
   // Handle delete slot action
   const handleDeleteSlot = useCallback(async () => {
     if (!selectedSlot) return;
@@ -147,6 +175,11 @@ export default function PlanningScreen() {
 
   const handleCloseActionMenu = useCallback(() => {
     setIsActionMenuVisible(false);
+    setSelectedSlot(null);
+  }, []);
+
+  const handleCloseEditPortionsModal = useCallback(() => {
+    setIsEditPortionsModalVisible(false);
     setSelectedSlot(null);
   }, []);
 
@@ -214,7 +247,17 @@ export default function PlanningScreen() {
         onClose={handleCloseActionMenu}
         onView={handleViewRecipe}
         onReplace={handleReplaceRecipe}
+        onEditPortions={handleEditPortions}
         onDelete={handleDeleteSlot}
+        recipeName={selectedSlot?.slot?.recipe_name || ''}
+      />
+
+      {/* Edit Portions Modal */}
+      <EditPortionsModal
+        visible={isEditPortionsModalVisible}
+        onClose={handleCloseEditPortionsModal}
+        onConfirm={handleConfirmPortions}
+        currentPortions={selectedSlot?.slot?.portions || preferences?.portions_count || 2}
         recipeName={selectedSlot?.slot?.recipe_name || ''}
       />
     </SafeAreaView>

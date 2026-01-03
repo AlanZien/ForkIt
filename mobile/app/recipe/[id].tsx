@@ -2,10 +2,11 @@
  * Recipe Detail Screen
  *
  * Displays full recipe details including ingredients and instructions.
+ * Includes portion selector to scale ingredient quantities.
  * Accessed via dynamic route /recipe/[id]
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -21,7 +22,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useRecipesStore } from '../../stores/recipes';
 import { useAuthStore } from '../../stores/auth';
+import { usePreferencesStore } from '../../stores/preferences';
 import { FavoriteButton } from '../../components/recipes/FavoriteButton';
+import { PortionSelector } from '../../components/preferences/PortionSelector';
+import { scaleQuantity } from '../../utils/scale-quantity';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -36,6 +40,19 @@ export default function RecipeDetailScreen() {
   } = useRecipesStore();
 
   const { isAuthenticated } = useAuthStore();
+  const { preferences } = usePreferencesStore();
+
+  // Portions state - defaults to user preference or 2
+  const [portions, setPortions] = useState<number>(
+    preferences?.portions_count || 2
+  );
+
+  // Update portions when preferences load
+  useEffect(() => {
+    if (preferences?.portions_count) {
+      setPortions(preferences.portions_count);
+    }
+  }, [preferences?.portions_count]);
 
   // Fetch recipe details on mount
   useEffect(() => {
@@ -170,7 +187,7 @@ export default function RecipeDetailScreen() {
                 onPress={handleOpenYoutube}
               >
                 <Ionicons name="logo-youtube" size={20} color="#DC2626" />
-                <Text style={styles.actionText}>Vidéo</Text>
+                <Text style={styles.actionText}>Video</Text>
               </TouchableOpacity>
             )}
             {selectedRecipe.source && (
@@ -184,15 +201,26 @@ export default function RecipeDetailScreen() {
             )}
           </View>
 
+          {/* Portion Selector */}
+          <View style={styles.portionSection}>
+            <Text style={styles.portionLabel}>Portions</Text>
+            <PortionSelector
+              value={portions}
+              onChange={setPortions}
+              min={1}
+              max={20}
+            />
+          </View>
+
           {/* Ingredients */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ingrédients</Text>
+            <Text style={styles.sectionTitle}>Ingredients</Text>
             <View style={styles.ingredientsList}>
               {selectedRecipe.ingredients.map((ingredient, index) => (
                 <View key={index} style={styles.ingredientItem}>
                   <View style={styles.ingredientBullet} />
                   <Text style={styles.ingredientMeasure}>
-                    {ingredient.measure}
+                    {scaleQuantity(ingredient.measure, portions)}
                   </Text>
                   <Text style={styles.ingredientName}>{ingredient.name}</Text>
                 </View>
@@ -363,6 +391,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#374151',
     fontWeight: '500',
+  },
+  portionSection: {
+    marginBottom: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  portionLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+    marginBottom: 12,
+    textAlign: 'center',
   },
   section: {
     marginBottom: 24,

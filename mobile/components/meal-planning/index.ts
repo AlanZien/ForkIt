@@ -9,4 +9,5 @@ export { DayColumn } from './DayColumn';
 export { WeekNavigator } from './WeekNavigator';
 export { RecipeSelectionModal } from './RecipeSelectionModal';
 export { SlotActionMenu } from './SlotActionMenu';
+export { EditPortionsModal } from './EditPortionsModal';
 export { WeekView } from './WeekView';

@@ -2,10 +2,10 @@
  * SlotActionMenu Component
  *
  * Bottom sheet action menu for meal slot actions.
- * Shows View, Replace, and Delete options with delete confirmation.
+ * Shows View, Replace, Edit Portions, and Delete options with delete confirmation.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ interface SlotActionMenuProps {
   onClose: () => void;
   onView: () => void;
   onReplace: () => void;
+  onEditPortions: () => void;
   onDelete: () => void;
   recipeName: string;
 }
@@ -61,6 +62,7 @@ export function SlotActionMenu({
   onClose,
   onView,
   onReplace,
+  onEditPortions,
   onDelete,
   recipeName,
 }: SlotActionMenuProps) {
@@ -96,6 +98,11 @@ export function SlotActionMenu({
     onReplace();
   };
 
+  const handleEditPortions = () => {
+    onClose();
+    onEditPortions();
+  };
+
   return (
     <Modal
       visible={visible}
@@ -128,6 +135,12 @@ export function SlotActionMenu({
               label="Remplacer"
               onPress={handleReplace}
               iconColor="#F59E0B"
+            />
+            <ActionItem
+              icon="create-outline"
+              label="Modifier les portions"
+              onPress={handleEditPortions}
+              iconColor="#8B5CF6"
             />
             <ActionItem
               icon="trash-outline"
