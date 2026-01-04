@@ -114,7 +114,8 @@ class RecipeFilterService:
             excluded = DIETARY_EXCLUSIONS.get(pref, [])
             for ingredient in ingredient_names:
                 for excluded_item in excluded:
-                    if RecipeFilterService._ingredient_contains(ingredient, excluded_item):
+                    contains = RecipeFilterService._ingredient_contains
+                    if contains(ingredient, excluded_item):
                         return False
         return True
 

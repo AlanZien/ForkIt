@@ -251,7 +251,7 @@ async def upload_recipe_image(
     # Upload to Supabase Storage
     try:
         supabase = get_supabase_admin()
-        result = supabase.storage.from_(STORAGE_BUCKET).upload(
+        supabase.storage.from_(STORAGE_BUCKET).upload(
             path=storage_path,
             file=content,
             file_options={"content-type": file.content_type},

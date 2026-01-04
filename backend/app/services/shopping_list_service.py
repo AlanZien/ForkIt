@@ -1,7 +1,7 @@
 """Shopping list service for generating and managing shopping lists."""
 
 import re
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from app.models.shopping_list import (
@@ -14,7 +14,6 @@ from app.models.shopping_list import (
 from app.services.meal_slots_service import MealSlotsService
 from app.services.supabase import get_supabase_admin
 from app.services.themealdb import themealdb_client
-
 
 # Static ingredient to category mapping
 # Maps common ingredient names (lowercase) to their category
@@ -940,7 +939,7 @@ class ShoppingListService:
             return ShoppingListGenerateResponse(
                 items=[],
                 week_start=week_start,
-                generated_at=datetime.now(timezone.utc),
+                generated_at=datetime.now(UTC),
             )
 
         # Aggregate ingredients: {normalized_name: {quantities: [], category}}
@@ -1016,7 +1015,7 @@ class ShoppingListService:
         return ShoppingListGenerateResponse(
             items=items,
             week_start=week_start,
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime.now(UTC),
         )
 
     def get_list(self, user_id: str, week_start: date) -> ShoppingListResponse:
