@@ -242,3 +242,13 @@ class UserPreferencesUpdate(BaseModel):
                 )
 
         return self
+
+
+class OnboardingStatusResponse(BaseModel):
+    """API response model for onboarding status.
+
+    Returns the user's onboarding completion status.
+    Used by GET /api/profile/onboarding-status endpoint.
+    """
+
+    onboarding_completed: bool = False

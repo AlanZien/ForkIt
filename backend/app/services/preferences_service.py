@@ -9,6 +9,7 @@ from typing import Any, cast
 from app.models.preferences import (
     AllergyType,
     DietaryType,
+    OnboardingStatusResponse,
     UserPreferencesResponse,
     UserPreferencesUpdate,
 )
@@ -224,6 +225,66 @@ class PreferencesService:
         except Exception as e:
             logger.error(f"Update preferences error: {e}")
             raise PreferencesError("Failed to update preferences")
+
+    def get_onboarding_status(self, user_id: str) -> OnboardingStatusResponse:
+        """Get user's onboarding completion status.
+
+        Args:
+            user_id: User's UUID.
+
+        Returns:
+            OnboardingStatusResponse with onboarding_completed flag.
+
+        Raises:
+            PreferencesError: If database operation fails.
+        """
+        try:
+            settings_response = (
+                self.client.table("user_settings")
+                .select("onboarding_completed")
+                .eq("user_id", user_id)
+                .execute()
+            )
+            settings_data = cast(list[dict[str, Any]], settings_response.data)
+
+            # Default to False if no record exists
+            onboarding_completed: bool = (
+                settings_data[0].get("onboarding_completed", False)
+                if settings_data
+                else False
+            )
+
+            return OnboardingStatusResponse(onboarding_completed=onboarding_completed)
+
+        except Exception as e:
+            logger.error(f"Get onboarding status error: {e}")
+            raise PreferencesError("Failed to retrieve onboarding status")
+
+    def complete_onboarding(self, user_id: str) -> OnboardingStatusResponse:
+        """Mark user's onboarding as completed.
+
+        Upserts user_settings with onboarding_completed=true.
+
+        Args:
+            user_id: User's UUID.
+
+        Returns:
+            OnboardingStatusResponse with onboarding_completed=True.
+
+        Raises:
+            PreferencesError: If database operation fails.
+        """
+        try:
+            self.client.table("user_settings").upsert(
+                {"user_id": user_id, "onboarding_completed": True},
+                on_conflict="user_id",
+            ).execute()
+
+            return OnboardingStatusResponse(onboarding_completed=True)
+
+        except Exception as e:
+            logger.error(f"Complete onboarding error: {e}")
+            raise PreferencesError("Failed to complete onboarding")
 
     def _check_halal_kosher_warning(
         self, dietary_preferences: list[DietaryType]
