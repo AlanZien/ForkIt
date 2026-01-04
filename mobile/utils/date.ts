@@ -195,6 +195,22 @@ export function getWeekDates(weekStart: Date): Date[] {
 }
 
 /**
+ * Get 7 dates starting from today
+ * @returns Array of 7 Date objects starting from today
+ */
+export function getDatesFromToday(): Date[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dates: Date[] = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    dates.push(date);
+  }
+  return dates;
+}
+
+/**
  * Check if a date is today
  * @param date - Date to check
  * @returns true if date is today

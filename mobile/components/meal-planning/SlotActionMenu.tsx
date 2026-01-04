@@ -94,12 +94,12 @@ export function SlotActionMenu({
   };
 
   const handleReplace = () => {
-    onClose();
+    // Don't call onClose() - it resets selectedSlot which is needed for the next modal
     onReplace();
   };
 
   const handleEditPortions = () => {
-    onClose();
+    // Don't call onClose() - it resets selectedSlot which is needed for the next modal
     onEditPortions();
   };
 

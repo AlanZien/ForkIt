@@ -99,7 +99,7 @@ export default function PlanningScreen() {
           recipe_id: recipe.recipe_id,
           recipe_name: recipe.recipe_name,
           recipe_thumbnail: recipe.recipe_thumbnail,
-          date: selectedSlot.date,
+          slot_date: selectedSlot.date,
           meal_type: selectedSlot.mealType,
           portions: preferences?.portions_count || 2,
         });
@@ -219,11 +219,10 @@ export default function PlanningScreen() {
 
       {/* Week Navigator */}
       <WeekNavigator
-        currentWeekStart={currentWeekStart}
         onPrevious={handlePreviousWeek}
         onNext={handleNextWeek}
-        canGoPrev={canNavigatePrev()}
-        canGoNext={canNavigateNext()}
+        canGoPrev={false}
+        canGoNext={false}
       />
 
       {/* Week View */}

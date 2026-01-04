@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { DayColumn } from './DayColumn';
 import { useMealPlanningStore } from '../../stores/meal-planning';
 import type { MealSlot, MealType } from '../../types/meal-slot';
-import { parseISO, getWeekDates, generateSlotKey } from '../../utils/date';
+import { getDatesFromToday, generateSlotKey, formatDateISO } from '../../utils/date';
 
 interface WeekViewProps {
   onSlotPress: (date: string, mealType: MealType) => void;
@@ -29,9 +29,8 @@ export function WeekView({ onSlotPress, onSlotLongPress }: WeekViewProps) {
   const { slots, currentWeekStart, isLoading, error, fetchWeek } =
     useMealPlanningStore();
 
-  // Get week dates
-  const weekStartDate = parseISO(currentWeekStart);
-  const weekDates = getWeekDates(weekStartDate);
+  // Get 7 days starting from today
+  const weekDates = getDatesFromToday();
 
   // Helper to get slot from map
   const getSlotForDay = (dateStr: string, mealType: MealType): MealSlot | null => {
@@ -92,7 +91,7 @@ export function WeekView({ onSlotPress, onSlotLongPress }: WeekViewProps) {
         style={styles.scrollView}
       >
         {weekDates.map((date) => {
-          const dateStr = date.toISOString().split('T')[0];
+          const dateStr = formatDateISO(date);
           return (
             <DayColumn
               key={dateStr}

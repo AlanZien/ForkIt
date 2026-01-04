@@ -8,10 +8,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { formatWeekLabel } from '../../utils/date';
+import { formatDayMonth, getMonthName } from '../../utils/date';
 
 interface WeekNavigatorProps {
-  currentWeekStart: string;
   onPrevious: () => void;
   onNext: () => void;
   canGoPrev: boolean;
@@ -20,14 +19,17 @@ interface WeekNavigatorProps {
 }
 
 export function WeekNavigator({
-  currentWeekStart,
   onPrevious,
   onNext,
   canGoPrev,
   canGoNext,
   style,
 }: WeekNavigatorProps) {
-  const weekLabel = formatWeekLabel(currentWeekStart);
+  // Generate label: "7 prochains jours" with date range
+  const today = new Date();
+  const endDate = new Date(today);
+  endDate.setDate(today.getDate() + 6);
+  const weekLabel = `${today.getDate()} - ${endDate.getDate()} ${getMonthName(endDate)}`;
 
   return (
     <View style={[styles.container, style]}>

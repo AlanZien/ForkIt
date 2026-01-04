@@ -92,7 +92,7 @@ export const useMealPlanningStore = create<MealPlanningState>((set, get) => ({
       const slotsMap = new Map<string, MealSlot>();
 
       for (const slot of response.slots) {
-        const key = generateSlotKey(slot.date, slot.meal_type);
+        const key = generateSlotKey(slot.slot_date, slot.meal_type);
         slotsMap.set(key, slot);
       }
 
@@ -113,14 +113,14 @@ export const useMealPlanningStore = create<MealPlanningState>((set, get) => ({
    * Add or replace a meal slot (optimistic update)
    */
   addSlot: async (data: MealSlotCreate) => {
-    const key = generateSlotKey(data.date, data.meal_type);
+    const key = generateSlotKey(data.slot_date, data.meal_type);
     const previousSlots = new Map(get().slots);
 
     // Optimistic update: add temporary slot
     const tempSlot: MealSlot = {
       id: `temp_${Date.now()}`,
       user_id: '',
-      date: data.date,
+      slot_date: data.slot_date,
       meal_type: data.meal_type,
       recipe_id: data.recipe_id,
       recipe_name: data.recipe_name,

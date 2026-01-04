@@ -15,7 +15,7 @@ export type MealType = 'dejeuner' | 'diner';
 export interface MealSlot {
   id: string;
   user_id: string;
-  date: string;
+  slot_date: string;
   meal_type: MealType;
   recipe_id: string;
   recipe_name: string;
@@ -32,7 +32,7 @@ export interface MealSlotCreate {
   recipe_id: string;
   recipe_name: string;
   recipe_thumbnail?: string | null;
-  date: string;
+  slot_date: string;
   meal_type: MealType;
   portions?: number;
 }
