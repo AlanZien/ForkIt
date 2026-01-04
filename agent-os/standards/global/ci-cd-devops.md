@@ -125,32 +125,31 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: '3.11'
+          version: "latest"
 
-      - name: Install linters
-        run: |
-          pip install black flake8 mypy
+      - name: Set up Python
+        run: uv python install 3.11
 
-      - name: Run Black
-        run: |
-          cd backend
-          black --check app/
+      - name: Install dependencies
+        run: uv sync --all-extras
 
-      - name: Run Flake8
-        run: |
-          cd backend
-          flake8 app/ --max-line-length=100
+      - name: Run Ruff (linting)
+        run: uv run ruff check app/
 
-      - name: Run MyPy
-        run: |
-          cd backend
-          mypy app/
+      - name: Run Ruff (formatting)
+        run: uv run ruff format --check app/
+
+      - name: Run MyPy (type checking)
+        run: uv run mypy app/
 
   # Deploy to Development
   deploy-dev:

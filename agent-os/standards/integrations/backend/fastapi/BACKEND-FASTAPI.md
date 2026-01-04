@@ -261,6 +261,80 @@ def test_create_recipe(client, auth_headers):
     assert response.json()["title"] == "Test Recipe"
 ```
 
+## Code Quality Rules (OBLIGATOIRE)
+
+### Avant de marquer une tâche comme complète :
+
+**1. Return Types** - Toute fonction doit avoir une annotation de retour
+```python
+# ❌ Mauvais
+async def get_recipe(id: str):
+    ...
+
+# ✅ Bon
+async def get_recipe(id: str) -> RecipeResponse:
+    ...
+```
+
+**2. Generic Types** - Toujours spécifier les paramètres de type
+```python
+# ❌ Mauvais
+def parse_data(data: dict) -> Recipe:
+
+# ✅ Bon
+def parse_data(data: dict[str, Any]) -> Recipe:
+```
+
+**3. Variable Naming** - Éviter la réutilisation de variables avec des types différents
+```python
+# ❌ Mauvais (mypy error)
+for recipe in personal_recipes:  # PersonalRecipe
+    ...
+for recipe in api_recipes:  # Recipe (type différent!)
+    ...
+
+# ✅ Bon
+for personal_recipe in personal_recipes:
+    ...
+for api_recipe in api_recipes:
+    ...
+```
+
+### Commandes de validation (exécuter AVANT commit)
+
+```bash
+# 1. Lint check - zéro erreur
+ruff check app/
+
+# 2. Format check - code formaté
+ruff format app/
+
+# 3. Type check - zéro erreur (sauf modules ignorés)
+mypy app/
+
+# 4. Tests - tous passent
+pytest tests/
+```
+
+### Configuration requise (pyproject.toml)
+
+```toml
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = false
+disallow_untyped_calls = false
+```
+
+---
+
 ## Best Practices
 
 1. **Async by Default** - All route handlers and service methods use `async/await`
