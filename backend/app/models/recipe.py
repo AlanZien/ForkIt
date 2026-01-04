@@ -20,6 +20,17 @@ class RecipeSummary(BaseModel):
     thumbnail: str
 
 
+class UnifiedRecipeSummary(BaseModel):
+    """Recipe summary with source field for unified search results."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    name: str
+    thumbnail: str
+    source: str  # "personal" or "api"
+
+
 class Recipe(BaseModel):
     """Full recipe details."""
 
@@ -82,6 +93,14 @@ class RecipeListResponse(BaseModel):
     """Response for recipe list endpoints."""
 
     recipes: list[RecipeSummary]
+
+
+class UnifiedSearchResponse(BaseModel):
+    """Response for unified search endpoint with personal + API recipes."""
+
+    recipes: list[UnifiedRecipeSummary]
+    personal_count: int
+    api_count: int
 
 
 class RecipeDetailResponse(BaseModel):

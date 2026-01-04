@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -26,6 +27,7 @@ import { usePreferencesStore } from '../../stores/preferences';
 import { FavoriteButton } from '../../components/recipes/FavoriteButton';
 import { PortionSelector } from '../../components/preferences/PortionSelector';
 import { scaleQuantity } from '../../utils/scale-quantity';
+import { forkRecipe } from '../../services/personal-recipes';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -46,6 +48,9 @@ export default function RecipeDetailScreen() {
   const [portions, setPortions] = useState<number>(
     preferences?.portions_count || 2
   );
+
+  // Fork state
+  const [isForking, setIsForking] = useState(false);
 
   // Update portions when preferences load
   useEffect(() => {
@@ -81,6 +86,36 @@ export default function RecipeDetailScreen() {
   const handleOpenSource = () => {
     if (selectedRecipe?.source) {
       Linking.openURL(selectedRecipe.source);
+    }
+  };
+
+  // Fork recipe as personal
+  const handleFork = async () => {
+    if (!id || isForking) return;
+
+    try {
+      setIsForking(true);
+      const forkedRecipe = await forkRecipe(id);
+
+      Alert.alert(
+        'Recette dupliquee',
+        'La recette a ete ajoutee a vos recettes personnelles. Voulez-vous la modifier ?',
+        [
+          {
+            text: 'Plus tard',
+            style: 'cancel',
+          },
+          {
+            text: 'Modifier',
+            onPress: () => router.push(`/recipe/edit/${forkedRecipe.id}`),
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Fork recipe failed:', error);
+      Alert.alert('Erreur', 'Impossible de dupliquer la recette.');
+    } finally {
+      setIsForking(false);
     }
   };
 
@@ -197,6 +232,22 @@ export default function RecipeDetailScreen() {
               >
                 <Ionicons name="link-outline" size={20} color="#14B8A6" />
                 <Text style={styles.actionText}>Source</Text>
+              </TouchableOpacity>
+            )}
+            {isAuthenticated && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.forkButton]}
+                onPress={handleFork}
+                disabled={isForking}
+              >
+                {isForking ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Ionicons name="copy-outline" size={20} color="#FFFFFF" />
+                    <Text style={styles.forkButtonText}>Dupliquer</Text>
+                  </>
+                )}
               </TouchableOpacity>
             )}
           </View>
@@ -390,6 +441,15 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 14,
     color: '#374151',
+    fontWeight: '500',
+  },
+  forkButton: {
+    backgroundColor: '#14B8A6',
+    borderColor: '#14B8A6',
+  },
+  forkButtonText: {
+    fontSize: 14,
+    color: '#FFFFFF',
     fontWeight: '500',
   },
   portionSection: {

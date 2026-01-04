@@ -15,7 +15,6 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -24,7 +23,8 @@ import { useRecipesStore } from '../../stores/recipes';
 import { useFavoritesStore } from '../../stores/favorites';
 import { useAuthStore } from '../../stores/auth';
 import { FavoriteButton } from '../../components/recipes/FavoriteButton';
-import type { RecipeSummary, Category } from '../../types/recipe';
+import { PersonalBadge } from '../../components/recipe/PersonalBadge';
+import type { RecipeSummary, Category, UnifiedRecipeSummary } from '../../types/recipe';
 import type { Favorite } from '../../types/favorite';
 
 export default function RecipesScreen() {
@@ -34,14 +34,19 @@ export default function RecipesScreen() {
 
   const {
     recipes,
+    unifiedResults,
     categories,
     searchQuery,
     selectedCategory,
     isLoading,
     isCategoriesLoading,
     error,
+    isUnifiedSearch,
+    personalCount,
+    apiCount,
     fetchCategories,
     searchRecipes,
+    unifiedSearchRecipes,
     fetchRecipesByCategory,
     clearSearch,
   } = useRecipesStore();
@@ -75,12 +80,16 @@ export default function RecipesScreen() {
     }
   }, [categories, selectedCategory, searchQuery, fetchRecipesByCategory]);
 
-  // Handle search with debounce
+  // Handle search - use unified search when authenticated
   const handleSearch = useCallback(() => {
     if (searchText.trim().length >= 2) {
-      searchRecipes(searchText.trim());
+      if (isAuthenticated) {
+        unifiedSearchRecipes(searchText.trim());
+      } else {
+        searchRecipes(searchText.trim());
+      }
     }
-  }, [searchText, searchRecipes]);
+  }, [searchText, searchRecipes, unifiedSearchRecipes, isAuthenticated]);
 
   // Handle category selection
   const handleCategoryPress = useCallback(
@@ -101,6 +110,23 @@ export default function RecipesScreen() {
     },
     [router]
   );
+
+  // Handle unified recipe press - route based on source
+  const handleUnifiedRecipePress = useCallback(
+    (recipe: UnifiedRecipeSummary) => {
+      if (recipe.source === 'personal') {
+        router.push(`/recipe/personal/${recipe.id}`);
+      } else {
+        router.push(`/recipe/${recipe.id}`);
+      }
+    },
+    [router]
+  );
+
+  // Navigate to create recipe screen
+  const handleCreateRecipe = useCallback(() => {
+    router.push('/recipe/create');
+  }, [router]);
 
   // Clear search
   const handleClearSearch = useCallback(() => {
@@ -158,6 +184,37 @@ export default function RecipesScreen() {
       <View style={styles.recipeImageContainer}>
         <Image source={{ uri: item.thumbnail }} style={styles.recipeImage} />
         {isAuthenticated && (
+          <FavoriteButton
+            recipeId={item.id}
+            recipeName={item.name}
+            recipeThumbnail={item.thumbnail}
+            size="small"
+            variant="overlay"
+            style={styles.favoriteButton}
+          />
+        )}
+      </View>
+      <View style={styles.recipeInfo}>
+        <Text style={styles.recipeName} numberOfLines={2}>
+          {item.name}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  // Render unified recipe card with PersonalBadge for personal recipes
+  const renderUnifiedRecipe = ({ item }: { item: UnifiedRecipeSummary }) => (
+    <TouchableOpacity
+      style={styles.recipeCard}
+      onPress={() => handleUnifiedRecipePress(item)}
+      activeOpacity={0.8}
+    >
+      <View style={styles.recipeImageContainer}>
+        <Image source={{ uri: item.thumbnail }} style={styles.recipeImage} />
+        {item.source === 'personal' && (
+          <PersonalBadge style={styles.personalBadge} />
+        )}
+        {item.source === 'api' && isAuthenticated && (
           <FavoriteButton
             recipeId={item.id}
             recipeName={item.name}
@@ -364,7 +421,9 @@ export default function RecipesScreen() {
                   : `Recettes ${selectedCategory}`}
               </Text>
               <Text style={styles.resultsCount}>
-                {recipes.length} recette{recipes.length !== 1 ? 's' : ''}
+                {isUnifiedSearch
+                  ? `${unifiedResults.length} (${personalCount} perso, ${apiCount} API)`
+                  : `${recipes.length} recette${recipes.length !== 1 ? 's' : ''}`}
               </Text>
             </View>
           )}
@@ -373,6 +432,17 @@ export default function RecipesScreen() {
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#14B8A6" />
             </View>
+          ) : isUnifiedSearch ? (
+            <FlatList
+              data={unifiedResults}
+              renderItem={renderUnifiedRecipe}
+              keyExtractor={(item) => `${item.source}-${item.id}`}
+              numColumns={2}
+              columnWrapperStyle={styles.recipeRow}
+              contentContainerStyle={styles.recipesList}
+              ListEmptyComponent={renderEmpty}
+              showsVerticalScrollIndicator={false}
+            />
           ) : (
             <FlatList
               data={recipes}
@@ -386,6 +456,17 @@ export default function RecipesScreen() {
             />
           )}
         </View>
+      )}
+
+      {/* FAB - Create Recipe Button */}
+      {isAuthenticated && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={handleCreateRecipe}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
       )}
     </SafeAreaView>
   );
@@ -594,5 +675,26 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontSize: 14,
     textAlign: 'center',
+  },
+  personalBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#14B8A6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });

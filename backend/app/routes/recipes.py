@@ -12,8 +12,11 @@ from app.models.recipe import (
     RecipeDetailResponse,
     RecipeListResponse,
     RecipeSummary,
+    UnifiedRecipeSummary,
+    UnifiedSearchResponse,
 )
 from app.routes.auth import get_optional_user
+from app.services.personal_recipes_service import PersonalRecipesService
 from app.services.preferences_service import PreferencesService
 from app.services.recipe_filter_service import RecipeFilterService
 from app.services.themealdb import themealdb_client
@@ -27,6 +30,75 @@ MAX_RANDOM_ATTEMPTS = 10
 def get_preferences_service() -> PreferencesService:
     """Dependency to get preferences service instance."""
     return PreferencesService()
+
+
+def get_personal_recipes_service() -> PersonalRecipesService:
+    """Dependency to get personal recipes service instance."""
+    return PersonalRecipesService()
+
+
+@router.get("/unified-search", response_model=UnifiedSearchResponse)
+async def unified_search_recipes(
+    q: str = Query(..., min_length=1, description="Search query"),
+    current_user: UserResponse | None = Depends(get_optional_user),
+    preferences_service: PreferencesService = Depends(get_preferences_service),
+    personal_recipes_service: PersonalRecipesService = Depends(
+        get_personal_recipes_service
+    ),
+):
+    """Search recipes across personal recipes and TheMealDB API.
+
+    Personal recipes are returned first, then API recipes.
+    If user is authenticated, filters API results based on their preferences.
+    """
+    unified_results: list[UnifiedRecipeSummary] = []
+    personal_count = 0
+    api_count = 0
+
+    # Search personal recipes if user is authenticated
+    if current_user:
+        personal_results = personal_recipes_service.search_recipes(
+            current_user.id, q
+        )
+        personal_count = len(personal_results)
+        for recipe in personal_results:
+            unified_results.append(
+                UnifiedRecipeSummary(
+                    id=recipe.id,
+                    name=recipe.title,
+                    thumbnail=recipe.image_url or "",
+                    source="personal",
+                )
+            )
+
+    # Search TheMealDB API
+    response = await themealdb_client.search_by_name(q)
+    meals = response.get("meals") or []
+
+    # Convert to Recipe objects for filtering
+    recipes = [Recipe.from_api_response(meal) for meal in meals]
+
+    # Apply filtering if user is authenticated
+    if current_user:
+        preferences = preferences_service.get_preferences(current_user.id)
+        recipes = RecipeFilterService.filter_recipes(recipes, preferences)
+
+    api_count = len(recipes)
+    for recipe in recipes:
+        unified_results.append(
+            UnifiedRecipeSummary(
+                id=recipe.id,
+                name=recipe.name,
+                thumbnail=recipe.thumbnail or "",
+                source="api",
+            )
+        )
+
+    return UnifiedSearchResponse(
+        recipes=unified_results,
+        personal_count=personal_count,
+        api_count=api_count,
+    )
 
 
 @router.get("/search", response_model=RecipeListResponse)

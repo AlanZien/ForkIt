@@ -101,6 +101,50 @@ class ApiClient {
   async delete<T>(endpoint: string): Promise<T> {
     return this.request<T>('DELETE', endpoint);
   }
+
+  /**
+   * Upload a file using multipart/form-data
+   */
+  async uploadFile<T>(endpoint: string, file: FormData): Promise<T> {
+    const { accessToken } = await getTokens();
+    const headers: Record<string, string> = {};
+
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: file,
+    });
+
+    if (response.status === 401) {
+      const refreshed = await this.refreshToken();
+      if (refreshed) {
+        const newHeaders: Record<string, string> = {};
+        const tokens = await getTokens();
+        if (tokens.accessToken) {
+          newHeaders['Authorization'] = `Bearer ${tokens.accessToken}`;
+        }
+        const retryResponse = await fetch(`${this.baseUrl}${endpoint}`, {
+          method: 'POST',
+          headers: newHeaders,
+          body: file,
+        });
+        if (!retryResponse.ok) {
+          throw new Error(`API Error: ${retryResponse.status}`);
+        }
+        return retryResponse.json();
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    return response.json();
+  }
 }
 
 export const api = new ApiClient(API_URL);

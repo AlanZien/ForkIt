@@ -16,7 +16,9 @@ import type {
   CategoryListResponse,
   RecipeDetailResponse,
   RecipeListResponse,
+  UnifiedSearchResponse,
 } from '../types/recipe';
+import { api } from './api';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -114,4 +116,16 @@ export async function getRecipesByCategory(
   }
 
   return response.json();
+}
+
+/**
+ * Unified search across personal and API recipes
+ * Requires authentication for personal recipes
+ */
+export async function unifiedSearchRecipes(
+  query: string
+): Promise<UnifiedSearchResponse> {
+  return api.get<UnifiedSearchResponse>(
+    `/api/recipes/unified-search?q=${encodeURIComponent(query)}`
+  );
 }

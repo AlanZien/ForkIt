@@ -23,12 +23,13 @@
  */
 
 import { create } from 'zustand';
-import type { Category, Recipe, RecipeSummary } from '../types/recipe';
+import type { Category, Recipe, RecipeSummary, UnifiedRecipeSummary } from '../types/recipe';
 import * as recipesService from '../services/recipes';
 
 interface RecipesState {
   // State
   recipes: RecipeSummary[];
+  unifiedResults: UnifiedRecipeSummary[];
   categories: Category[];
   selectedRecipe: Recipe | null;
   searchQuery: string;
@@ -37,10 +38,14 @@ interface RecipesState {
   isCategoriesLoading: boolean;
   isDetailsLoading: boolean;
   error: string | null;
+  isUnifiedSearch: boolean;
+  personalCount: number;
+  apiCount: number;
 
   // Actions
   fetchCategories: () => Promise<void>;
   searchRecipes: (query: string) => Promise<void>;
+  unifiedSearchRecipes: (query: string) => Promise<void>;
   fetchRecipesByCategory: (category: string) => Promise<void>;
   fetchRecipeDetails: (id: string) => Promise<void>;
   fetchRandomRecipe: () => Promise<void>;
@@ -51,6 +56,7 @@ interface RecipesState {
 
 const initialState = {
   recipes: [],
+  unifiedResults: [],
   categories: [],
   selectedRecipe: null,
   searchQuery: '',
@@ -59,6 +65,9 @@ const initialState = {
   isCategoriesLoading: false,
   isDetailsLoading: false,
   error: null,
+  isUnifiedSearch: false,
+  personalCount: 0,
+  apiCount: 0,
 };
 
 export const useRecipesStore = create<RecipesState>((set) => ({
@@ -89,7 +98,7 @@ export const useRecipesStore = create<RecipesState>((set) => ({
    * Search recipes by name
    */
   searchRecipes: async (query: string) => {
-    set({ isLoading: true, error: null, searchQuery: query, selectedCategory: null });
+    set({ isLoading: true, error: null, searchQuery: query, selectedCategory: null, isUnifiedSearch: false });
 
     try {
       const response = await recipesService.searchRecipes(query);
@@ -103,6 +112,38 @@ export const useRecipesStore = create<RecipesState>((set) => ({
         isLoading: false,
         error: message,
         recipes: [],
+      });
+    }
+  },
+
+  /**
+   * Unified search across personal and API recipes
+   */
+  unifiedSearchRecipes: async (query: string) => {
+    set({
+      isLoading: true,
+      error: null,
+      searchQuery: query,
+      selectedCategory: null,
+      isUnifiedSearch: true,
+    });
+
+    try {
+      const response = await recipesService.unifiedSearchRecipes(query);
+      set({
+        unifiedResults: response.recipes,
+        personalCount: response.personal_count,
+        apiCount: response.api_count,
+        isLoading: false,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      set({
+        isLoading: false,
+        error: message,
+        unifiedResults: [],
+        personalCount: 0,
+        apiCount: 0,
       });
     }
   },
@@ -180,7 +221,11 @@ export const useRecipesStore = create<RecipesState>((set) => ({
       searchQuery: '',
       selectedCategory: null,
       recipes: [],
+      unifiedResults: [],
       error: null,
+      isUnifiedSearch: false,
+      personalCount: 0,
+      apiCount: 0,
     });
   },
 
