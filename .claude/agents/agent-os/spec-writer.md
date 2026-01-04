@@ -166,3 +166,6 @@ IMPORTANT: Ensure that the spec you create IS ALIGNED and DOES NOT CONFLICT with
 @agent-os/standards/global/security.md
 @agent-os/standards/global/ci-cd-devops.md
 @agent-os/standards/testing/test-writing.md
+
+# Error & Blocking Management
+@agent-os/standards/global/error-handling.md

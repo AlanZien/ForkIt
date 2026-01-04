@@ -262,7 +262,76 @@ This updates the Project in Notion:
 
 **Note**: If Notion sync fails, the workflow continues normally.
 
-### Step 8: Output Completion
+### Step 8: Analyze Complexity and Recommend Track
+
+After documenting requirements, analyze the feature complexity to recommend the appropriate workflow track.
+
+**Complexity Scoring:**
+
+Count the following elements from your requirements analysis:
+
+| Element | Points | How to Count |
+|---------|--------|--------------|
+| UI Components | 1 pt each | Screens, modals, forms, lists identified |
+| API Endpoints | 2 pts each | Backend routes needed (GET, POST, PUT, DELETE) |
+| Database Changes | 3 pts each | New tables, columns, migrations |
+| External Integrations | 5 pts each | Third-party APIs, services, SDKs |
+| User Test Scenarios | 0.5 pts each | Distinct user flows or acceptance criteria |
+| State Management | 2 pts each | New stores, complex state logic |
+| Authentication/Security | 3 pts | If auth logic is involved |
+
+**Calculate Total Score:**
+
+```
+complexity_score = (
+    ui_components × 1 +
+    api_endpoints × 2 +
+    db_changes × 3 +
+    external_integrations × 5 +
+    user_scenarios × 0.5 +
+    state_stores × 2 +
+    auth_involved × 3
+)
+```
+
+**Track Determination:**
+
+| Score | Track | Workflow |
+|-------|-------|----------|
+| ≤ 8 | 🚀 FAST | /write-spec → /create-tasks → /implement-tasks |
+| 9-20 | ⚙️ STANDARD | /write-spec → /plan-tests → /create-tasks → /implement-tasks → /verify |
+| > 20 | 🏗️ COMPLEX | /verify-spec → /write-spec → /plan-tests → /create-tasks → /orchestrate-tasks → /verify |
+
+**Add to requirements.md:**
+
+Append the following section at the end of requirements.md:
+
+```markdown
+---
+
+## Complexity Analysis
+
+### Elements Identified
+| Element | Count | Points |
+|---------|-------|--------|
+| UI Components | [X] | [X × 1] |
+| API Endpoints | [X] | [X × 2] |
+| Database Changes | [X] | [X × 3] |
+| External Integrations | [X] | [X × 5] |
+| User Scenarios | [X] | [X × 0.5] |
+| State Management | [X] | [X × 2] |
+| Auth/Security | [0/1] | [X × 3] |
+
+**Total Complexity Score: [SCORE]**
+
+### Recommended Track
+[🚀 FAST / ⚙️ STANDARD / 🏗️ COMPLEX]
+
+**Recommended Workflow:**
+[List the workflow steps for this track]
+```
+
+### Step 9: Output Completion with Track Recommendation
 
 Return to orchestrator:
 
@@ -276,7 +345,34 @@ Requirements research complete!
 
 Requirements saved to: `[spec-path]/planning/requirements.md`
 
-Ready for specification creation.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 COMPLEXITY ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Score: [TOTAL] points
+
+| Element | Count |
+|---------|-------|
+| UI Components | [X] |
+| API Endpoints | [X] |
+| DB Changes | [X] |
+| Integrations | [X] |
+| User Scenarios | [X] |
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 RECOMMENDED TRACK: [TRACK NAME]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Next steps:
+1. [First command to run]
+2. [Second command]
+3. [...]
+
+Options:
+- Press ENTER to accept this track
+- Type "fast", "standard", or "complex" to override
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ## Important Constraints
@@ -315,3 +411,6 @@ IMPORTANT: Ensure that all of your questions and final documented requirements A
 @agent-os/standards/global/security.md
 @agent-os/standards/global/ci-cd-devops.md
 @agent-os/standards/testing/test-writing.md
+
+# Error & Blocking Management
+@agent-os/standards/global/error-handling.md

@@ -146,6 +146,44 @@ Write `agent-os/specs/[current-spec]/test-plan.md` with this structure:
 **Then:** [Final state and data persistence verified]
 **Related Requirement:** [Reference to spec.md section]
 
+## E2E Tests
+
+> **Note:** E2E tests are required for STANDARD and COMPLEX tracks.
+> Check `agent-os/standards/global-standards.md` (Tech Stack) to determine the tool:
+> - **Mobile (Expo/React Native)** → Maestro (`maestro/flows/*.yaml`)
+> - **Web (Next.js/Vite)** → Playwright (`frontend/e2e/*.spec.ts`)
+
+### [User Journey Name] (X tests)
+
+#### [test-file-name]
+**Priority:** Critical | High | Medium
+**Preconditions:**
+- [App state required before test]
+- [User authentication state]
+- [Test data requirements]
+
+**Steps:**
+1. [User action description]
+2. [Next action]
+3. [Assertion/verification]
+
+**Success Criteria:**
+- [What indicates the test passed]
+- [Data verification if needed]
+
+**Related User Story:** [Reference to requirements.md]
+
+### Example E2E Tests by Feature Type
+
+**Authentication:**
+- login-success, login-invalid, logout, register
+
+**CRUD operations:**
+- create-[resource], view-[resource]-list, edit-[resource], delete-[resource]
+
+**Complex journeys:**
+- complete-checkout, onboarding-wizard, search-and-filter
+
 ## Test Dependencies
 
 Document execution order requirements:
@@ -383,5 +421,8 @@ IMPORTANT: Ensure tests align with the tech stack and testing frameworks defined
 
 # Testing Standards
 @agent-os/standards/testing/test-writing.md
+
+# Error & Blocking Management
+@agent-os/standards/global/error-handling.md
 
 Use the testing frameworks, patterns, and conventions from these standards when specifying tests.

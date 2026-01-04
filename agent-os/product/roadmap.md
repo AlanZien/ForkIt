@@ -18,7 +18,7 @@
 
 8. [ ] **AI-Powered Menu Suggestions** - Implement weekly menu suggestions that consider user preferences, past selections, and variety. Display as actionable suggestions that can be applied to the planning calendar. `L`
 
-9. [ ] **Personal Recipe Management** - Allow users to create, edit, and delete their own recipes. Personal recipes appear alongside API recipes in search and can be added to meal plans. `M` *(en cours)*
+9. [x] **Personal Recipe Management** - Allow users to create, edit, and delete their own recipes. Personal recipes appear alongside API recipes in search and can be added to meal plans. `M`
 
 10. [x] **Portion Adjustment** - Add household size setting to user profile. Automatically adjust ingredient quantities in shopping list based on number of portions needed. `S`
 

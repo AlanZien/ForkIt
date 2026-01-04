@@ -283,6 +283,80 @@ This validates:
   - Take screenshots of the views and UI elements you've tested and store those in `agent-os/specs/[this-spec]/verification/screenshots/`.  Do not store screenshots anywhere else in the codebase other than this location.
   - Analyze the screenshot(s) you've taken to check them against your current requirements.
 
+## E2E Tests (STANDARD and COMPLEX tracks only)
+
+If `test-plan.md` contains an **E2E Tests** section, you MUST implement those tests.
+
+### When to Write E2E Tests
+
+| Track | E2E Required? |
+|-------|---------------|
+| 🚀 FAST | Optional |
+| ⚙️ STANDARD | **Required** for UI tasks |
+| 🏗️ COMPLEX | **Required** for all flows |
+
+### Determine E2E Tool
+
+Check `agent-os/standards/global-standards.md` (Tech Stack):
+
+| Project Type | Tool | Location | Run Command |
+|--------------|------|----------|-------------|
+| Mobile (Expo/RN) | Maestro | `maestro/flows/*.yaml` | `maestro test maestro/flows/` |
+| Web (Next.js/Vite) | Playwright | `frontend/e2e/*.spec.ts` | `npm run test:e2e` |
+
+### TestID Convention
+
+Add test identifiers to UI components:
+
+```tsx
+// Mobile (React Native) - testID prop
+<TouchableOpacity testID="favorite-button" />
+
+// Web (React) - data-testid attribute
+<button data-testid="favorite-button" />
+```
+
+**Naming:** `{action}-button`, `{field}-input`, `{type}-card`, `{type}-list`
+
+### E2E Completion Checklist
+
+Before marking UI tasks complete:
+- [ ] All tests from test-plan.md E2E section implemented
+- [ ] All UI components have test identifiers
+- [ ] Local E2E run passes
+- [ ] Tests follow project naming conventions
+
+## Standards Compliance Check (REQUIRED before marking tasks complete)
+
+Before marking any task as complete, run the standards verification:
+
+```bash
+./scripts/verify-standards.sh
+```
+
+This validates:
+1. **Backend linting (Ruff)**: Python code style and potential errors
+2. **TypeScript type check**: Mobile code type safety
+3. **Security audit**: No hardcoded secrets, proper .env handling
+4. **API contract consistency**: Backend/mobile type alignment
+5. **Code quality**: No debug statements (console.log, print) in production code
+
+### Handling Standards Violations
+
+| Severity | Action |
+|----------|--------|
+| **Linting errors** | Fix immediately with `./scripts/verify-standards.sh --fix` |
+| **Type errors** | Fix before marking task complete |
+| **Security issues** | **CRITICAL** - Must fix before any commit |
+| **Warnings** | Note in implementation report, fix if time permits |
+
+### Minimum Requirements
+
+- [ ] `ruff check` passes with 0 errors
+- [ ] `tsc --noEmit` passes with 0 errors
+- [ ] No hardcoded secrets detected
+- [ ] No .env files tracked by git
+
 
 ## User Standards & Preferences Compliance
 
@@ -312,3 +386,6 @@ IMPORTANT: Ensure that the tasks list you create IS ALIGNED and DOES NOT CONFLIC
 @agent-os/standards/global/security.md
 @agent-os/standards/global/ci-cd-devops.md
 @agent-os/standards/testing/test-writing.md
+
+# Error & Blocking Management
+@agent-os/standards/global/error-handling.md

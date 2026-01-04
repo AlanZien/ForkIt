@@ -483,24 +483,25 @@ Estimated Complexity: High (Multi-table database, Storage, Full CRUD API, Multi-
 #### Task Group 9: API Service Layer (Mobile)
 **Dependencies:** Task Group 6 (API must be ready)
 **Estimated Duration:** 1-2 hours
+**Status:** COMPLETED
 
-- [ ] 9.0 Complete mobile API service for personal recipes
-  - [ ] 9.1 Create `mobile/services/personalRecipes.ts`
+- [x] 9.0 Complete mobile API service for personal recipes
+  - [x] 9.1 Create `mobile/services/personal-recipes.ts`
     - Import axios/fetch client from existing pattern
     - Define TypeScript interfaces matching backend models
-  - [ ] 9.2 Implement CRUD API calls
+  - [x] 9.2 Implement CRUD API calls
     - getPersonalRecipes(): PersonalRecipeSummary[]
     - getPersonalRecipe(id): PersonalRecipeResponse
     - createPersonalRecipe(data): PersonalRecipeResponse
     - updatePersonalRecipe(id, data): PersonalRecipeResponse
     - deletePersonalRecipe(id): void
-  - [ ] 9.3 Implement fork API call
+  - [x] 9.3 Implement fork API call
     - forkRecipe(apiRecipeId): PersonalRecipeResponse
-  - [ ] 9.4 Implement image upload
+  - [x] 9.4 Implement image upload
     - uploadRecipeImage(file): Promise<string> (returns URL)
     - Handle multipart/form-data
     - Integrate with expo-image-picker result
-  - [ ] 9.5 Add error handling
+  - [x] 9.5 Add error handling
     - Handle 401 (redirect to login)
     - Handle 404 (recipe not found)
     - Handle 422 (validation errors - show messages)
@@ -512,43 +513,49 @@ Estimated Complexity: High (Multi-table database, Storage, Full CRUD API, Multi-
 - Proper error handling and user feedback
 - Image upload works with device files
 
+**Implementation Notes:**
+- Service file: `mobile/services/personal-recipes.ts`
+- Types file: `mobile/types/personal-recipe.ts`
+- All CRUD + fork + image upload implemented
+
 ---
 
 #### Task Group 10: Recipe Form Components
 **Dependencies:** Task Group 9
 **Estimated Duration:** 3-4 hours
 **Reference Pattern:** `mobile/components/ui/Input.tsx`, `mobile/components/ui/Button.tsx`
+**Status:** COMPLETED
 
-- [ ] 10.0 Complete recipe form components
-  - [ ] 10.1 Write form component tests
+- [x] 10.0 Complete recipe form components
+  - [x] 10.1 Write form component tests
     - Test IngredientInput renders correctly
     - Test IngredientInput add/remove functionality
     - Test InstructionStepInput add/remove/reorder
     - Test RecipeForm validation
     - Expected: 4-6 tests
-  - [ ] 10.2 Create `mobile/components/recipe/IngredientInput.tsx`
+  - [x] 10.2 Create `mobile/components/recipe/IngredientListInput.tsx`
     - Props: ingredients[], onChange, errors
     - Row layout: name (TextInput), quantity (numeric TextInput), unit (Picker/Dropdown), note (TextInput)
     - Add button to append new ingredient
     - Remove button (X) on each row
     - Validation: highlight empty required fields
-  - [ ] 10.3 Create unit dropdown data
+  - [x] 10.3 Create unit dropdown data
     - Common units: g, kg, ml, L, tsp, tbsp, cup, piece, pinch, to taste
     - Localized labels (French): g, kg, ml, L, c. a cafe, c. a soupe, tasse, piece, pincee, au gout
-  - [ ] 10.4 Create `mobile/components/recipe/InstructionStepInput.tsx`
+  - [x] 10.4 Create `mobile/components/recipe/InstructionStepListInput.tsx`
     - Props: steps[], onChange, errors
     - Each step: step number (auto), instruction (TextInput multiline)
     - Add button to append new step
     - Remove button on each step
     - Auto-renumber when step removed
-  - [ ] 10.5 Create `mobile/components/recipe/ImagePicker.tsx`
+  - [x] 10.5 Create `mobile/components/recipe/RecipeImagePicker.tsx`
     - Props: imageUrl, onChange
     - Show current image preview or placeholder
     - "Ajouter une photo" button
     - On press: show ActionSheet (Camera / Galerie / Annuler)
     - Use expo-image-picker for both options
     - Compress/resize image before setting
-  - [ ] 10.6 Create `mobile/components/recipe/RecipeForm.tsx`
+  - [x] 10.6 Create `mobile/components/recipe/RecipeForm.tsx`
     - Composite form with sections:
       - Basic Info: title, servings (stepper), prep_time, cook_time
       - Image: ImagePicker component
@@ -558,15 +565,15 @@ Estimated Complexity: High (Multi-table database, Storage, Full CRUD API, Multi-
     - Props: initialData?, onSubmit, isLoading, errors
     - Form state management (useState or react-hook-form)
     - Client-side validation before submit
-  - [ ] 10.7 Create `mobile/components/recipe/ServingsStepper.tsx`
+  - [x] 10.7 Create `mobile/components/recipe/ServingsStepper.tsx`
     - Props: value, onChange, min=1, max=20
     - Display: - [value] +
     - Disable - at min, + at max
-  - [ ] 10.8 Create `mobile/components/recipe/TagsSelector.tsx`
+  - [x] 10.8 Create `mobile/components/recipe/TagsSelector.tsx`
     - Props: selected[], onChange
     - Predefined tags: Rapide, Vegetarien, Sans gluten, Dessert, etc.
     - Chip/pill style, toggle selection
-  - [ ] 10.9 Verify form component tests pass
+  - [x] 10.9 Verify form component tests pass
     - Expected: 4-6 tests passing
 
 **Acceptance Criteria:**
@@ -581,34 +588,35 @@ Estimated Complexity: High (Multi-table database, Storage, Full CRUD API, Multi-
 #### Task Group 11: Recipe Creation Screen
 **Dependencies:** Task Group 10
 **Estimated Duration:** 2-3 hours
+**Status:** COMPLETED
 
-- [ ] 11.0 Complete recipe creation screen
-  - [ ] 11.1 Write creation screen tests
+- [x] 11.0 Complete recipe creation screen
+  - [x] 11.1 Write creation screen tests
     - Test screen renders form
     - Test form submission calls API
     - Test validation errors displayed
     - Test navigation after success
     - Expected: 3-4 tests
-  - [ ] 11.2 Create `mobile/app/recipe/create.tsx`
+  - [x] 11.2 Create `mobile/app/recipe/create.tsx`
     - Screen title: "Nouvelle recette"
     - Render RecipeForm component
     - Handle form submission
-  - [ ] 11.3 Implement form submission
+  - [x] 11.3 Implement form submission
     - Validate form data
     - If image selected: upload image first, get URL
     - Call createPersonalRecipe API
     - Show loading state during submission
-  - [ ] 11.4 Handle success
+  - [x] 11.4 Handle success
     - Show success toast: "Recette creee avec succes"
     - Navigate to recipe detail OR back to list
-  - [ ] 11.5 Handle errors
+  - [x] 11.5 Handle errors
     - Display validation errors inline on form
     - Display API errors as alert/toast
     - Keep form data on error (don't clear)
-  - [ ] 11.6 Add navigation entry point
+  - [x] 11.6 Add navigation entry point
     - Add "+" button or "Creer une recette" in appropriate location
     - Likely in recipe list screen or tab bar
-  - [ ] 11.7 Verify creation screen tests pass
+  - [x] 11.7 Verify creation screen tests pass
     - Expected: 3-4 tests passing
 
 **Acceptance Criteria:**
@@ -623,33 +631,34 @@ Estimated Complexity: High (Multi-table database, Storage, Full CRUD API, Multi-
 #### Task Group 12: Recipe Edit Screen
 **Dependencies:** Task Group 10, Task Group 11
 **Estimated Duration:** 1-2 hours
+**Status:** COMPLETED
 
-- [ ] 12.0 Complete recipe edit screen
-  - [ ] 12.1 Write edit screen tests
+- [x] 12.0 Complete recipe edit screen
+  - [x] 12.1 Write edit screen tests
     - Test screen loads existing recipe data
     - Test form pre-populated correctly
     - Test update submission
     - Expected: 2-3 tests
-  - [ ] 12.2 Create `mobile/app/recipe/edit/[id].tsx`
+  - [x] 12.2 Create `mobile/app/recipe/edit/[id].tsx`
     - Screen title: "Modifier la recette"
     - Fetch recipe by ID on mount
     - Show loading state while fetching
-  - [ ] 12.3 Pre-populate form
+  - [x] 12.3 Pre-populate form
     - Transform PersonalRecipeResponse to form state
     - Pass initialData to RecipeForm
-  - [ ] 12.4 Implement update submission
+  - [x] 12.4 Implement update submission
     - Call updatePersonalRecipe API
     - Handle image change (upload new if changed)
     - Show loading state
-  - [ ] 12.5 Handle success and errors
+  - [x] 12.5 Handle success and errors
     - Success: toast + navigate back
     - Errors: display inline
-  - [ ] 12.6 Add delete functionality
+  - [x] 12.6 Add delete functionality
     - "Supprimer" button (danger variant)
     - Confirmation dialog before delete
     - Call deletePersonalRecipe API
     - Navigate to list on success
-  - [ ] 12.7 Verify edit screen tests pass
+  - [x] 12.7 Verify edit screen tests pass
     - Expected: 2-3 tests passing
 
 **Acceptance Criteria:**
@@ -664,20 +673,21 @@ Estimated Complexity: High (Multi-table database, Storage, Full CRUD API, Multi-
 #### Task Group 13: Personal Recipe Detail View
 **Dependencies:** Task Group 9
 **Estimated Duration:** 1-2 hours
+**Status:** COMPLETED
 
-- [ ] 13.0 Complete personal recipe detail view
-  - [ ] 13.1 Identify existing recipe detail component/screen
+- [x] 13.0 Complete personal recipe detail view
+  - [x] 13.1 Identify existing recipe detail component/screen
     - Check if recipe/[id].tsx exists for API recipes
     - Plan reuse or extension for personal recipes
-  - [ ] 13.2 Adapt detail view for personal recipes
+  - [x] 13.2 Create `mobile/app/recipe/personal/[id].tsx`
     - If personal recipe (source="personal"): fetch from personal API
     - Display structured ingredients (quantity + unit + name)
     - Display numbered steps
     - Display prep/cook time, servings, tags
-  - [ ] 13.3 Add edit button for owned recipes
+  - [x] 13.3 Add edit button for owned recipes
     - "Modifier" button visible only for personal recipes
     - Navigate to edit screen on press
-  - [ ] 13.4 Add "Ma recette" badge on detail view
+  - [x] 13.4 Add "Ma recette" badge on detail view
     - Small badge near title or thumbnail
     - Same styling as list badge
 
@@ -692,14 +702,15 @@ Estimated Complexity: High (Multi-table database, Storage, Full CRUD API, Multi-
 #### Task Group 14: Visual Badge Component
 **Dependencies:** None (can run in parallel)
 **Estimated Duration:** 30 minutes
+**Status:** COMPLETED
 
-- [ ] 14.0 Complete "Ma recette" badge component
-  - [ ] 14.1 Create `mobile/components/recipe/PersonalBadge.tsx`
+- [x] 14.0 Complete "Ma recette" badge component
+  - [x] 14.1 Create `mobile/components/recipe/PersonalBadge.tsx`
     - Small pill/badge component
     - Text: "Ma recette"
     - Colors: background #FEF3C7, text #92400E (from spec)
     - Size: small, non-intrusive
-  - [ ] 14.2 Position badge on recipe cards
+  - [x] 14.2 Position badge on recipe cards
     - Absolute position: top-left corner of thumbnail
     - Small margin from edges
     - Semi-transparent or solid background
@@ -714,18 +725,19 @@ Estimated Complexity: High (Multi-table database, Storage, Full CRUD API, Multi-
 #### Task Group 15: Recipe Card Integration
 **Dependencies:** Task Group 14
 **Estimated Duration:** 1 hour
+**Status:** COMPLETED
 
-- [ ] 15.0 Integrate personal recipes into existing recipe lists
-  - [ ] 15.1 Identify existing RecipeCard component
+- [x] 15.0 Integrate personal recipes into existing recipe lists
+  - [x] 15.1 Identify existing RecipeCard component
     - Check mobile/components for recipe card/list item
-  - [ ] 15.2 Add source prop to RecipeCard
+  - [x] 15.2 Add source prop to RecipeCard
     - Props: source?: "personal" | "api"
     - Conditionally render PersonalBadge if source="personal"
-  - [ ] 15.3 Update recipe list screens
+  - [x] 15.3 Update recipe list screens
     - Search results: display mixed results with badges
     - Favorites: if any personal recipes, show badge
     - Meal plan: show badge on personal recipe slots
-  - [ ] 15.4 Handle recipe card tap
+  - [x] 15.4 Handle recipe card tap
     - If personal: navigate to personal recipe detail
     - If API: navigate to API recipe detail
     - Use source field to determine routing
@@ -740,20 +752,21 @@ Estimated Complexity: High (Multi-table database, Storage, Full CRUD API, Multi-
 #### Task Group 16: Fork Action Integration
 **Dependencies:** Task Group 9
 **Estimated Duration:** 1 hour
+**Status:** COMPLETED
 
-- [ ] 16.0 Complete fork action on API recipe detail
-  - [ ] 16.1 Add fork button to API recipe detail screen
+- [x] 16.0 Complete fork action on API recipe detail
+  - [x] 16.1 Add fork button to API recipe detail screen
     - Button: "Dupliquer" or fork icon
     - Visible only for authenticated users
     - Position: action bar or header
-  - [ ] 16.2 Implement fork action handler
+  - [x] 16.2 Implement fork action handler
     - On press: call forkRecipe(apiRecipeId) service
     - Show loading state
-  - [ ] 16.3 Handle fork success
+  - [x] 16.3 Handle fork success
     - Show toast: "Recette dupliquee dans vos recettes personnelles"
     - Navigate to edit screen with forked recipe
     - Allow user to customize immediately
-  - [ ] 16.4 Handle fork errors
+  - [x] 16.4 Handle fork errors
     - Display error toast
     - Stay on current screen
 

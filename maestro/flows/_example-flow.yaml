@@ -1,0 +1,34 @@
+# Example Maestro Flow
+# Rename and modify for your first E2E test
+# Documentation: https://maestro.mobile.dev/reference/commands
+
+appId: ${APP_BUNDLE_ID}
+---
+# Launch the app
+- launchApp:
+    clearState: true
+
+# Wait for app to load
+- waitForAnimationToEnd
+
+# Example: Navigate through onboarding (if applicable)
+# - tapOn: "Commencer"
+# - waitForAnimationToEnd
+
+# Example: Login flow
+# - tapOn:
+#     id: "email-input"
+# - inputText: ${TEST_USER_EMAIL}
+# - tapOn:
+#     id: "password-input"
+# - inputText: ${TEST_USER_PASSWORD}
+# - tapOn: "Se connecter"
+# - waitForAnimationToEnd
+
+# Example: Verify home screen
+# - assertVisible: "Mes recettes"
+
+# Example: Navigate to a tab
+# - tapOn: "Planning"
+# - waitForAnimationToEnd
+# - assertVisible: "Planification des repas"

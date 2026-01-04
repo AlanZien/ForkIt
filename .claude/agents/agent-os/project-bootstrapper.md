@@ -216,6 +216,339 @@ CREATE TABLE IF NOT EXISTS users (
 );
 ```
 
+## E2E Testing: Maestro Setup
+
+If tech-stack.md includes **Mobile: Expo** or **Mobile: React Native**, set up Maestro for E2E testing:
+
+**Step 1: Create Maestro folder structure**
+```bash
+mkdir -p maestro/flows
+```
+
+**Step 2: Create Maestro configuration**
+
+Create `maestro/config.yaml`:
+```yaml
+# Maestro E2E Test Configuration
+# Documentation: https://maestro.mobile.dev/
+
+# App configuration
+appId: ${APP_BUNDLE_ID}
+
+# Default settings
+flows:
+  - flows/
+
+# Environment variables (loaded from .env.maestro)
+env:
+  BASE_URL: ${BASE_URL:-http://localhost:8000}
+
+# Timeouts
+timeout: 30000
+```
+
+Create `maestro/.env.maestro.example`:
+```
+APP_BUNDLE_ID=com.yourapp.app
+BASE_URL=http://localhost:8000
+```
+
+**Step 3: Create example flow**
+
+Create `maestro/flows/_example-flow.yaml`:
+```yaml
+# Example Maestro Flow
+# Rename and modify for your first E2E test
+# Documentation: https://maestro.mobile.dev/reference/commands
+
+appId: ${APP_BUNDLE_ID}
+---
+# Launch the app
+- launchApp:
+    clearState: true
+
+# Wait for app to load
+- waitForAnimationToEnd
+
+# Example assertions - modify for your app
+- assertVisible: "Welcome"
+
+# Example tap action
+# - tapOn: "Get Started"
+
+# Example text input
+# - tapOn:
+#     id: "email-input"
+# - inputText: "test@example.com"
+```
+
+**Step 4: Create Maestro README**
+
+Create `maestro/README.md`:
+```markdown
+# E2E Tests with Maestro
+
+## Installation
+
+\`\`\`bash
+# macOS
+brew install maestro
+
+# Other platforms: https://maestro.mobile.dev/getting-started/installing-maestro
+\`\`\`
+
+## Running Tests
+
+\`\`\`bash
+# Run all flows
+maestro test maestro/flows/
+
+# Run specific flow
+maestro test maestro/flows/login-flow.yaml
+
+# Run with debug output
+maestro test --debug maestro/flows/
+\`\`\`
+
+## Writing Tests
+
+1. Create a new `.yaml` file in \`maestro/flows/\`
+2. Use the \_example-flow.yaml as a template
+3. Reference: https://maestro.mobile.dev/reference/commands
+
+## Common Commands
+
+| Command | Description |
+|---------|-------------|
+| \`- launchApp\` | Start the app |
+| \`- tapOn: "Text"\` | Tap element with text |
+| \`- tapOn: { id: "test-id" }\` | Tap element by testID |
+| \`- inputText: "value"\` | Type text |
+| \`- assertVisible: "Text"\` | Assert text is visible |
+| \`- assertNotVisible: "Text"\` | Assert text is not visible |
+| \`- scroll\` | Scroll down |
+| \`- back\` | Press back button |
+| \`- waitForAnimationToEnd\` | Wait for animations |
+
+## CI Integration
+
+Add to your CI pipeline:
+\`\`\`yaml
+- name: Run E2E Tests
+  run: |
+    maestro test maestro/flows/
+\`\`\`
+```
+
+**Step 5: Update .gitignore**
+
+Add to project root `.gitignore`:
+```
+# Maestro
+maestro/.env.maestro
+maestro/reports/
+maestro/screenshots/
+```
+
+**Step 6: Add npm script (if package.json exists)**
+
+Add to `package.json` scripts:
+```json
+{
+  "scripts": {
+    "test:e2e": "maestro test maestro/flows/",
+    "test:e2e:debug": "maestro test --debug maestro/flows/"
+  }
+}
+```
+
+## E2E Testing: Playwright Setup (Web Projects)
+
+If tech-stack.md includes **Frontend: Next.js** or **Frontend: Vite**, set up Playwright for E2E testing:
+
+**Step 1: Install Playwright**
+```bash
+cd frontend && npm init playwright@latest
+```
+
+When prompted:
+- TypeScript: Yes
+- Tests folder: `e2e`
+- GitHub Actions: No (can add later)
+- Install browsers: Yes
+
+**Step 2: Create Playwright configuration**
+
+Update `frontend/playwright.config.ts`:
+```typescript
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'html',
+  use: {
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+    // Mobile viewports
+    {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    },
+  ],
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+
+**Step 3: Create example test**
+
+Create `frontend/e2e/_example.spec.ts`:
+```typescript
+import { test, expect } from '@playwright/test';
+
+// Example Playwright E2E Test
+// Rename and modify for your first test
+// Documentation: https://playwright.dev/docs/writing-tests
+
+test.describe('Example Flow', () => {
+  test('should load homepage', async ({ page }) => {
+    // Navigate to homepage
+    await page.goto('/');
+
+    // Wait for page to load
+    await page.waitForLoadState('networkidle');
+
+    // Example assertion - modify for your app
+    await expect(page).toHaveTitle(/Your App/);
+  });
+
+  test('should navigate to login', async ({ page }) => {
+    await page.goto('/');
+
+    // Example: Click login button
+    // await page.click('text=Se connecter');
+
+    // Example: Fill form
+    // await page.fill('[data-testid="email-input"]', 'test@example.com');
+    // await page.fill('[data-testid="password-input"]', 'password123');
+    // await page.click('[data-testid="submit-button"]');
+
+    // Example: Assert redirect
+    // await expect(page).toHaveURL('/dashboard');
+  });
+});
+```
+
+**Step 4: Create Playwright README**
+
+Create `frontend/e2e/README.md`:
+```markdown
+# E2E Tests with Playwright
+
+## Running Tests
+
+\`\`\`bash
+# Run all tests
+npm run test:e2e
+
+# Run tests in UI mode (visual debugger)
+npm run test:e2e:ui
+
+# Run specific test file
+npx playwright test e2e/auth.spec.ts
+
+# Run in headed mode (see browser)
+npx playwright test --headed
+
+# Debug mode
+npx playwright test --debug
+\`\`\`
+
+## Writing Tests
+
+1. Create a new \`.spec.ts\` file in \`e2e/\`
+2. Use \`_example.spec.ts\` as a template
+3. Reference: https://playwright.dev/docs/writing-tests
+
+### TestID Convention
+
+Add \`data-testid\` attributes to components:
+
+\`\`\`tsx
+<button data-testid="submit-button">Submit</button>
+<input data-testid="email-input" />
+\`\`\`
+
+### Common Commands
+
+| Command | Description |
+|---------|-------------|
+| \`page.goto('/')\` | Navigate to URL |
+| \`page.click('text=Button')\` | Click by text |
+| \`page.click('[data-testid="id"]')\` | Click by testID |
+| \`page.fill('input', 'value')\` | Fill input |
+| \`expect(page).toHaveURL('/path')\` | Assert URL |
+| \`expect(locator).toBeVisible()\` | Assert visible |
+| \`page.waitForLoadState('networkidle')\` | Wait for network |
+
+## View Test Report
+
+After running tests:
+\`\`\`bash
+npx playwright show-report
+\`\`\`
+```
+
+**Step 5: Update .gitignore**
+
+Add to project root `.gitignore`:
+```
+# Playwright
+frontend/playwright-report/
+frontend/playwright/.cache/
+frontend/test-results/
+```
+
+**Step 6: Add npm scripts**
+
+Add to `frontend/package.json` scripts:
+```json
+{
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug"
+  }
+}
+```
+
 ## Configuration Files
 
 ### TypeScript Config (for TypeScript projects)

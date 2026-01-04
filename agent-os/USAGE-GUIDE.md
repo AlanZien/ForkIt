@@ -1,141 +1,208 @@
 # Agent-OS Usage Guide
 
-## Quand utiliser agent-os ?
+## Workflow Tracks
 
-Ce guide aide a decider quel niveau de workflow utiliser selon la complexite de la feature.
-
----
-
-## Niveaux de workflow
-
-| Niveau | Criteres | Workflow | Duree estimee |
-|--------|----------|----------|---------------|
-| **Direct** | < 5 fichiers, pattern existant | Pas de spec, implementation directe | < 2h |
-| **Leger** | 5-15 fichiers, nouveau pattern | spec.md + tasks.md | 2h - 1 jour |
-| **Complet** | > 15 fichiers, architecture nouvelle | Tous les agents | > 1 jour |
+Agent-OS utilise trois tracks adaptes a la complexite de la feature. Le track est **detecte automatiquement** lors du `/shape-spec` mais peut etre override.
 
 ---
 
-## Direct (sans agent-os)
+## Les 3 Tracks
 
-### Quand l'utiliser
-- Bug fixes
-- Ajout d'un champ a un formulaire existant
-- Nouvelle route API simple (CRUD basique)
-- Modifications de texte/traduction
-- Ajustements CSS/styling
-
-### Processus
-1. Comprendre le probleme
-2. Implementer directement
-3. Tester
-4. Commit
+| Track | Score | Duree | Quand l'utiliser |
+|-------|-------|-------|------------------|
+| 🚀 **FAST** | ≤ 8 pts | 1-3 jours | Bug fixes, petites features, ajustements |
+| ⚙️ **STANDARD** | 9-20 pts | 3-7 jours | Features completes, nouveaux ecrans |
+| 🏗️ **COMPLEX** | > 20 pts | 1-3 semaines | Multi-composants, integrations complexes |
 
 ---
 
-## Leger (spec + tasks)
+## 🚀 Track FAST
 
-### Quand l'utiliser
-- Nouveau composant UI reutilisable
-- Integration API externe simple
-- Nouvelle page avec etat local
-- Feature avec 2-3 couches (backend + mobile)
+### Workflow
+```
+/shape-spec → /write-spec → /create-tasks → /implement-tasks
+```
 
-### Fichiers a creer
+### Caracteristiques
+- Pas de test-plan obligatoire
+- Implementation directe
+- Verification standards uniquement
+
+### Exemples
+- Ajouter un bouton logout
+- Fix bug d'affichage
+- Nouveau champ dans un formulaire existant
+- Ajustements styling/CSS
+
+---
+
+## ⚙️ Track STANDARD
+
+### Workflow
+```
+/shape-spec → /write-spec → /plan-tests → /create-tasks → /implement-tasks → /verify
+```
+
+### Caracteristiques
+- **Test-plan obligatoire** (TDD)
+- Implementation avec tests
+- Verification complete
+
+### Exemples
+- Recipe Browsing (liste + detail)
+- Shopping List Generation
+- User Profile & Preferences
+- Favoris avec persistence
+
+---
+
+## 🏗️ Track COMPLEX
+
+### Workflow
+```
+/shape-spec → /verify-spec → /write-spec → /plan-tests → /create-tasks → /orchestrate-tasks → /verify
+```
+
+### Caracteristiques
+- **Verification de spec obligatoire**
+- Test-plan exhaustif
+- **Orchestration parallele** des agents
+- Suite de verification complete
+
+### Exemples
+- Systeme d'authentification complet
+- AI-Powered Menu Suggestions
+- Offline Support avec sync
+- Systeme de paiement
+
+---
+
+## Detection Automatique
+
+Lors du `/shape-spec`, l'agent analyse les requirements et calcule un score de complexite :
+
+| Element | Points |
+|---------|--------|
+| UI Components (ecrans, modals, forms) | 1 pt chacun |
+| API Endpoints | 2 pts chacun |
+| Database Changes (tables, migrations) | 3 pts chacun |
+| External Integrations | 5 pts chacun |
+| User Scenarios | 0.5 pts chacun |
+| State Management (stores) | 2 pts chacun |
+| Auth/Security implique | 3 pts |
+
+### Exemple de calcul
+
+**Feature : Shopping List Generation**
+- UI Components : 3 (liste, categories, items) = 3 pts
+- API Endpoints : 2 (GET list, PATCH item) = 4 pts
+- DB Changes : 1 (table shopping_items) = 3 pts
+- User Scenarios : 5 = 2.5 pts
+- State Management : 1 (store) = 2 pts
+
+**Total : 14.5 pts → ⚙️ STANDARD**
+
+---
+
+## Override du Track
+
+Apres l'analyse, vous pouvez override le track recommande :
+
+```
+🎯 RECOMMENDED TRACK: ⚙️ STANDARD
+
+Do you accept this track? (yes/override with: fast, standard, complex)
+> fast
+```
+
+### Raisons de faire un override
+
+| Override | Raison valide |
+|----------|---------------|
+| → FAST | Feature bien comprise, pattern existant, deadline serre |
+| → STANDARD | Feature critique meme si petite, besoin de tests |
+| → COMPLEX | Integration avec systemes externes, risque eleve |
+
+---
+
+## Fichiers generes par track
+
+### 🚀 FAST
 ```
 agent-os/specs/YYYY-MM-DD-feature-name/
-  raw-idea.md      # Idee brute (optionnel)
-  spec.md          # Specification technique
-  tasks.md         # Liste des taches
-  user-tests.md    # Tests utilisateur (optionnel)
+├── raw-idea.md
+├── planning/
+│   ├── requirements.md
+│   └── track.md
+├── spec.md
+└── tasks.md
 ```
 
-### Processus
-1. Ecrire spec.md avec les endpoints, modeles, UI
-2. Decouper en tasks.md avec groupes et dependances
-3. Implementer groupe par groupe
-4. Valider avec tests
+### ⚙️ STANDARD
+```
+agent-os/specs/YYYY-MM-DD-feature-name/
+├── raw-idea.md
+├── planning/
+│   ├── requirements.md
+│   ├── track.md
+│   └── visuals/
+├── spec.md
+├── tasks.md
+├── test-plan.md          ← Obligatoire
+└── verifications/
+    └── final-verification.md
+```
 
-### Exemple
-- Recipe Browsing (ForkIt)
-- User Profile & Preferences (ForkIt)
+### 🏗️ COMPLEX
+```
+agent-os/specs/YYYY-MM-DD-feature-name/
+├── raw-idea.md
+├── planning/
+│   ├── requirements.md
+│   ├── track.md
+│   └── visuals/
+├── spec.md
+├── spec-verification.md  ← Obligatoire
+├── tasks.md
+├── test-plan.md          ← Obligatoire
+├── implementation/
+│   └── [task-group-reports]
+└── verifications/
+    └── final-verification.md
+```
 
 ---
 
-## Complet (tous les agents)
+## Commandes par Track
 
-### Quand l'utiliser
-- Systeme de paiement/abonnement
-- Notifications push avec backend
-- Systeme de recommandation/ML
-- Refactoring majeur d'architecture
-- Multi-tenancy / multi-workspace
-- Features avec 5+ couches interdependantes
-
-### Agents disponibles
-| Agent | Role |
-|-------|------|
-| `spec-initializer` | Initialise le dossier spec |
-| `spec-shaper` | Affine les requirements via questions |
-| `spec-writer` | Ecrit la specification detaillee |
-| `task-list-creator` | Cree le decoupage en taches |
-| `test-planner` | Planifie les tests techniques |
-| `implementer` | Implemente les taches |
-| `implementation-verifier` | Verifie l'implementation |
-
-### Processus
-1. `/agent-os:shape-spec` - Clarifier les besoins
-2. `/agent-os:write-spec` - Specification complete
-3. `/agent-os:create-tasks` - Decoupage strategique
-4. `/agent-os:plan-tests` - Plan de tests
-5. `/agent-os:implement-tasks` - Implementation
-6. Verification et sync Notion
+| Commande | FAST | STANDARD | COMPLEX |
+|----------|------|----------|---------|
+| `/shape-spec` | ✅ | ✅ | ✅ |
+| `/verify-spec` | - | - | ✅ Obligatoire |
+| `/write-spec` | ✅ | ✅ | ✅ |
+| `/plan-tests` | Optionnel | ✅ Obligatoire | ✅ Obligatoire |
+| `/create-tasks` | ✅ | ✅ | ✅ |
+| `/implement-tasks` | ✅ | ✅ | - |
+| `/orchestrate-tasks` | - | - | ✅ |
+| Verification finale | Standards only | ✅ Complet | ✅ Complet |
 
 ---
 
 ## Regle de decision rapide
 
-> **"Est-ce que je peux expliquer la feature en 1 paragraphe ?"**
+> **En cas de doute, laissez la detection automatique decider.**
 
-| Reponse | Niveau |
-|---------|--------|
-| Oui, c'est simple | **Direct** |
-| Oui, mais avec des details techniques | **Leger** |
-| Non, c'est complexe avec plusieurs systemes | **Complet** |
+Le calcul du score est base sur des criteres objectifs. Si vous pensez que le track recommande est incorrect, c'est souvent parce que :
 
----
-
-## Exemples par categorie
-
-### Backend seul
-| Feature | Niveau |
-|---------|--------|
-| Ajouter un champ au modele User | Direct |
-| Nouveau endpoint CRUD | Direct |
-| Integration TheMealDB | Leger |
-| Systeme de cache Redis | Complet |
-
-### Mobile seul
-| Feature | Niveau |
-|---------|--------|
-| Fix bug affichage | Direct |
-| Nouveau composant bouton | Direct |
-| Ecran avec formulaire + validation | Leger |
-| Navigation complexe multi-stack | Complet |
-
-### Full-stack
-| Feature | Niveau |
-|---------|--------|
-| Ajouter un champ profile | Direct |
-| Recipe Browsing (liste + detail) | Leger |
-| Systeme d'authentification complet | Complet |
-| Real-time collaboration | Complet |
+1. Vous sous-estimez la complexite (laissez STANDARD)
+2. Vous avez deja un pattern similaire (override vers FAST)
+3. La feature a des implications cachees (override vers COMPLEX)
 
 ---
 
 ## Notes
 
-- En cas de doute, commencer par **Leger** et ajuster
-- Le workflow **Complet** n'est pas toujours necessaire meme pour les grosses features
-- La sync Notion est optionnelle a tous les niveaux
-- Les user-tests.md peuvent etre crees meme en mode Direct pour des features critiques
+- Le track est sauvegarde dans `planning/track.md`
+- Changer de track en cours de route est possible mais deconseille
+- Les standards (`verify-standards.sh`) sont verifies a tous les tracks
+- La sync Notion fonctionne a tous les tracks

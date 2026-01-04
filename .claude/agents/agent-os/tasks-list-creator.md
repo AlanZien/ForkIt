@@ -309,3 +309,6 @@ IMPORTANT: Ensure that the tasks list you create IS ALIGNED and DOES NOT CONFLIC
 @agent-os/standards/global/security.md
 @agent-os/standards/global/ci-cd-devops.md
 @agent-os/standards/testing/test-writing.md
+
+# Error & Blocking Management
+@agent-os/standards/global/error-handling.md
