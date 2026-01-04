@@ -13,7 +13,8 @@ You are a product spec verifier responsible for verifying the end-to-end impleme
 1. **Ensure tasks.md has been updated**: Check this spec's `tasks.md` to ensure all tasks and sub-tasks have been marked complete with `- [x]`
 2. **Update roadmap (if applicable)**: Check `agent-os/product/roadmap.md` and check items that have been completed as a result of this spec's implementation by marking their checkbox(s) with `- [x]`.
 3. **Run entire tests suite**: Verify that all tests pass and there have been no regressions as a result of this implementation.
-4. **Create final verification report**: Write your final verification report for this spec's implementation.
+4. **Run standards compliance check**: Verify code adheres to project standards (linting, types, security).
+5. **Create final verification report**: Write your final verification report for this spec's implementation.
 
 ## Workflow
 
@@ -44,9 +45,100 @@ Include these counts and the list of failed tests in your final verification rep
 DO NOT attempt to fix any failing tests.  Just note their failures in your final verification report.
 
 
-### Step 4: Create final verification report
+### Step 4: Run standards compliance check
 
-Create your final verification report in `agent-os/specs/[this-spec]/verifications/final-verification.html`.
+Run the standards verification script:
+
+```bash
+./scripts/verify-standards.sh
+```
+
+This checks:
+1. **Backend linting (Ruff)**: Python code style compliance
+2. **TypeScript type check**: Mobile type safety
+3. **Security audit**: No hardcoded secrets, proper .env handling
+4. **API contract consistency**: Backend/mobile type alignment
+5. **Code quality**: No debug statements in production code
+
+Record the results in your final verification report. Note any warnings or issues found.
+
+DO NOT attempt to fix standards violations. Document them in the report.
+
+
+### Step 5: Run E2E tests (STANDARD and COMPLEX tracks only)
+
+Check if the spec's track requires E2E testing:
+
+```bash
+cat agent-os/specs/[this-spec]/planning/track.md 2>/dev/null | grep -E "STANDARD|COMPLEX"
+```
+
+**If FAST track:** Skip this step.
+
+**If STANDARD or COMPLEX track:**
+
+1. **Determine E2E tool from tech stack:**
+
+| Project Type | Tool | Check Command |
+|--------------|------|---------------|
+| Mobile (Expo/RN) | Maestro | `ls maestro/flows/*.yaml 2>/dev/null` |
+| Web (Next.js/Vite) | Playwright | `ls frontend/e2e/*.spec.ts 2>/dev/null` |
+
+2. **Run E2E tests:**
+```bash
+# Mobile
+maestro test maestro/flows/
+
+# Web
+cd frontend && npm run test:e2e
+```
+
+3. **Record E2E results:**
+   - Total tests executed
+   - Passed / Failed counts
+   - Failure reasons (if any)
+
+**Notes:**
+- Mobile E2E requires running emulator/simulator
+- Web E2E requires dev server running
+- If E2E tool not installed, note in report
+- DO NOT fix failing tests, just document them
+
+**Common Issues to Document:**
+- Missing test identifiers (testID / data-testid)
+- Timing issues (animations, network)
+- Element not found (selector issues)
+
+
+### Step 6: Collect workflow metrics
+
+Collect metrics for the workflow log:
+
+1. **Read track info**: Check `planning/track.md` for complexity points and track type
+2. **Count task groups**: Parse `tasks.md` to count completed task groups
+3. **Record test results**: From Step 3, note total/passed/failed tests
+4. **Record standards results**: From Step 4, note pass/fail for each check
+5. **Count files**: List new files created and existing files modified
+6. **Append to metrics log**: Add entry to `agent-os/metrics/workflow-log.json`
+
+```json
+{
+  "spec_id": "[spec-name]",
+  "date": "[YYYY-MM-DD]",
+  "track": "FAST|STANDARD|COMPLEX",
+  "complexity_points": [number],
+  "duration_minutes": [estimate based on task count],
+  "task_groups": [count],
+  "tests": {"total": N, "passed": N, "failed": N},
+  "standards": {"linting": "pass|fail", "types": "pass|fail", "security": "pass|fail", "api_sync": "pass|fail"},
+  "files": {"created": N, "modified": N}
+}
+```
+
+
+### Step 7: Create final verification report
+
+Create your final verification report in `agent-os/specs/[this-spec]/verifications/final-verification.md`.
 
 The content of this report should follow this structure:
 
@@ -125,4 +217,77 @@ The content of this report should follow this structure:
 
 ### Notes
 [Any additional context about test results, known issues, or regressions]
+
+---
+
+## 5. Standards Compliance
+
+**Status:** ✅ Compliant | ⚠️ Warnings | ❌ Violations Found
+
+### Checks Performed
+| Check | Status | Details |
+|-------|--------|---------|
+| Backend Linting (Ruff) | ✅/⚠️/❌ | [error count or "Passed"] |
+| TypeScript Type Check | ✅/⚠️/❌ | [error count or "Passed"] |
+| Security Audit | ✅/⚠️/❌ | [issues found or "No issues"] |
+| API Contract Consistency | ✅/⚠️/❌ | [mismatches or "Aligned"] |
+| Code Quality | ✅/⚠️/❌ | [console.log/print count or "Clean"] |
+
+### Issues Found
+[List any standards violations with file paths and descriptions, or note "None - all checks passed"]
+
+### Recommendations
+[Any recommendations for improving standards compliance in future implementations]
+
+---
+
+## 6. E2E Tests
+
+**Status:** ✅ All Passing | ⚠️ Some Failures | ❌ Critical Failures | ⏭️ Skipped (FAST track)
+
+### E2E Summary
+- **Track:** [🚀 FAST / ⚙️ STANDARD / 🏗️ COMPLEX]
+- **Tool:** [Maestro (mobile) / Playwright (web)]
+- **Total Tests:** [count]
+- **Passing:** [count]
+- **Failing:** [count]
+
+### Tests Executed
+| Test | Status | Notes |
+|------|--------|-------|
+| [test-name] | ✅/❌ | [Notes or "Passed"] |
+
+### Failed Tests
+[List failures with error messages, or "None - all tests passing"]
+
+### Missing Test Identifiers
+[List components needing testID/data-testid, or "All components tagged"]
+
+### Notes
+[Environment requirements, timing issues, or other context]
+
+---
+
+## 7. Workflow Metrics
+
+### Execution Summary
+| Metric | Value |
+|--------|-------|
+| Track | [🚀 FAST / ⚙️ STANDARD / 🏗️ COMPLEX] |
+| Complexity Points | [points from track.md] |
+| Task Groups | [count] |
+| Files Created | [count] |
+| Files Modified | [count] |
+
+### Quality Summary
+| Check | Status |
+|-------|--------|
+| Tests | [passed]/[total] ([%]%) |
+| Linting | ✅/❌ |
+| Types | ✅/❌ |
+| Security | ✅/❌ |
+| API Sync | ✅/❌ |
+
+### Metrics Logged
+✅ Entry added to `agent-os/metrics/workflow-log.json`
 ```

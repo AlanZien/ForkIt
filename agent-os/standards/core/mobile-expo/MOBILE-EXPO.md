@@ -488,6 +488,71 @@ export default function LoginScreen() {
 }
 ```
 
+## Code Quality Rules (OBLIGATOIRE)
+
+### Avant de marquer une tâche comme complète :
+
+**1. Strict TypeScript** - Zéro `any`, types explicites
+```typescript
+// ❌ Mauvais
+const handleData = (data: any) => { ... }
+
+// ✅ Bon
+const handleData = (data: Recipe) => { ... }
+```
+
+**2. Return Types** - Fonctions avec types de retour explicites
+```typescript
+// ❌ Mauvais
+const fetchRecipes = async () => {
+  return await api.get('/recipes');
+}
+
+// ✅ Bon
+const fetchRecipes = async (): Promise<Recipe[]> => {
+  return await api.get('/recipes');
+}
+```
+
+**3. Mocks pour Tests** - Créer les mocks nécessaires pour react-native/expo
+```
+mobile/__mocks__/
+├── react-native.ts      # Platform, etc.
+└── expo-secure-store.ts # Storage mocks
+```
+
+### Commandes de validation (exécuter AVANT commit)
+
+```bash
+# 1. TypeScript check - zéro erreur
+npx tsc --noEmit
+
+# 2. Tests - tous passent
+npm test
+
+# 3. (Optionnel) ESLint
+npx expo lint
+```
+
+### Configuration requise
+
+**tsconfig.json**
+```json
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true
+  }
+}
+```
+
+**.gitignore** (ajouter)
+```
+types/generated/
+```
+
+---
+
 ## Best Practices
 
 1. **TypeScript First** - Always use types, avoid `any`

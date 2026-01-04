@@ -1,6 +1,40 @@
 {
   "enabledMcpjsonServers": ["notion"],
   "enableAllProjectMcpServers": true,
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(pnpm:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(npx:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(cd backend && python:*)",
+      "Bash(uv:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh:*)",
+      "Edit(**)",
+      "Read(**)",
+      "Write(**)",
+      "Task",
+      "mcp__plugin_Notion_notion__*"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -9,6 +43,18 @@
             "type": "command",
             "command": "bash .claude/hooks/session-start.sh",
             "statusMessage": "Chargement de l'état Notion..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git push:*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-push-report.sh",
+            "statusMessage": "Exécution des tests avant push..."
           }
         ]
       }

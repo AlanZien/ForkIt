@@ -84,3 +84,9 @@ supabase/.temp/
 .mcp.json
 .claude/settings.local.json
 .claude/hooks/load-notion-state.js
+.coverage
+
+# Maestro E2E Testing
+maestro/.env.maestro
+maestro/reports/
+maestro/screenshots/

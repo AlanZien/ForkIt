@@ -1,0 +1,86 @@
+#!/bin/sh
+# Pre-commit hook for ForkIt
+# Runs quality checks before allowing commits
+
+echo "🔍 Running pre-commit checks..."
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+# Track if any check fails
+FAILED=0
+
+# Get list of staged files
+STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.py$' | grep '^backend/' || true)
+STAGED_TS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$' | grep '^mobile/' || true)
+
+# Backend checks (only if Python files are staged)
+if [ -n "$STAGED_PY" ]; then
+    echo "\n📦 Backend checks..."
+
+    cd backend
+
+    # Ruff lint
+    echo "  → Ruff lint..."
+    if ! python3 -m ruff check app/ --quiet; then
+        echo "${RED}  ✗ Ruff lint failed${NC}"
+        FAILED=1
+    else
+        echo "${GREEN}  ✓ Ruff lint passed${NC}"
+    fi
+
+    # Ruff format
+    echo "  → Ruff format..."
+    if ! python3 -m ruff format --check app/ --quiet 2>/dev/null; then
+        echo "${RED}  ✗ Ruff format failed - run 'ruff format app/'${NC}"
+        FAILED=1
+    else
+        echo "${GREEN}  ✓ Ruff format passed${NC}"
+    fi
+
+    # MyPy
+    echo "  → MyPy..."
+    if ! uv run mypy app/ --no-error-summary 2>/dev/null | grep -q "Success"; then
+        if uv run mypy app/ 2>&1 | grep -q "error:"; then
+            echo "${RED}  ✗ MyPy failed${NC}"
+            FAILED=1
+        else
+            echo "${GREEN}  ✓ MyPy passed${NC}"
+        fi
+    else
+        echo "${GREEN}  ✓ MyPy passed${NC}"
+    fi
+
+    cd ..
+fi
+
+# Mobile checks (only if TypeScript files are staged)
+if [ -n "$STAGED_TS" ]; then
+    echo "\n📱 Mobile checks..."
+
+    cd mobile
+
+    # TypeScript
+    echo "  → TypeScript..."
+    if ! npx tsc --noEmit 2>/dev/null; then
+        echo "${RED}  ✗ TypeScript failed${NC}"
+        FAILED=1
+    else
+        echo "${GREEN}  ✓ TypeScript passed${NC}"
+    fi
+
+    cd ..
+fi
+
+# Final result
+echo ""
+if [ $FAILED -eq 1 ]; then
+    echo "${RED}❌ Pre-commit checks failed. Fix errors before committing.${NC}"
+    echo "   Tip: Use 'git commit --no-verify' to skip (not recommended)"
+    exit 1
+else
+    echo "${GREEN}✅ All pre-commit checks passed!${NC}"
+    exit 0
+fi

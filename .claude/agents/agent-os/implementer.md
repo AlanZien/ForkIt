@@ -17,11 +17,23 @@ Implement all tasks assigned to you and ONLY those task(s) that have been assign
 3. **If test-plan.md exists**: Write tests FIRST following Given-When-Then specifications exactly, then implement code to make tests pass (True TDD)
 4. **If test-plan.md does NOT exist**: Implement assigned task group according to requirements and standards, writing tests alongside
 5. Update `agent-os/specs/[this-spec]/tasks.md` to update the tasks you've implemented to mark that as done by updating their checkbox to checked state: `- [x]`
-6. Sync completed tasks to Notion:
-   ```bash
-   node scripts/sync-to-notion.js "agent-os/specs/[this-spec]"
-   ```
-   This updates Task statuses in Notion and tracks progress automatically.
+6. Sync completed tasks to Notion via MCP:
+   - Use `mcp__plugin_Notion_notion__notion-search` to find the task by Task ID in ✅ Tasks database
+   - Use `mcp__plugin_Notion_notion__notion-update-page` to update the task status:
+     - Set `Status` to "Terminé" when task is completed
+     - Set `Status` to "En cours" when starting a task
+   - After completing a Task Group, update the parent 🎯 Project:
+     - Calculate and update `Avancement` (percentage of completed tasks)
+     - If all tasks completed, set `Status` to "Terminé"
+
+   **Status Mapping (French):**
+   | State | Notion Status |
+   |-------|---------------|
+   | Starting task | "En cours" |
+   | Task completed | "Terminé" |
+   | Task blocked | "En attente" |
+
+   **Note**: If Notion sync fails, continue with implementation. tasks.md is the source of truth.
 
 ## REQUIRED: Use Core Service Abstractions
 
@@ -163,56 +175,52 @@ Test failures fall into three categories. Handle each differently:
    - Verify function signatures match test expectations
    - Review similar working code in codebase
 
-4. **If still stuck after 30 minutes → Log Bug in Notion**
+4. **If still stuck after 30 minutes → Log Bug in Notion via MCP**
 
-   Open your Notion workspace: 🐛 Bugs database
+   Use `mcp__plugin_Notion_notion__notion-create-pages` to create a bug entry in the 🐛 Bugs database.
 
-   Create new bug entry with:
-   - **Name**: `[test_function_name] fails - [brief description]`
-     - Example: `test_user_creation_requires_email fails - ValidationError not raised`
+   **Database:** `collection://9bc9eef1-dad7-4839-a7fd-689f1eff91ad` (🐛 Bugs)
 
-   - **Test Name**: Exact test function name from test-plan.md
-     - Example: `test_user_creation_requires_email`
+   **Property Mapping:**
 
-   - **Test File**: Full path to test file
-     - Example: `backend/tests/models/test_user.py`
+   | Field | Notion Property | Example |
+   |-------|-----------------|---------|
+   | Title | `Name` | "test_user_creation_requires_email fails - ValidationError not raised" |
+   | Test function | `Test Name` | "test_user_creation_requires_email" |
+   | Test file path | `Test File` | "backend/tests/models/test_user.py" |
+   | Error output | `Error Message` | Raw error from test run |
+   | Priority mapping | `Severity` | "Critical", "High", "Medium", "Low" |
+   | Initial status | `Status` | "New" |
+   | Context & attempts | `Steps to Reproduce` | What you tried, debug info |
+   | Today's date | `date:Reported Date:start` | "2025-12-31" |
+   | Parent project | `Project` | Relation to 🎯 Projects page |
+   | Related task | `Task` | Relation to ✅ Tasks page |
 
-   - **Error Message**: Copy raw error output from test run
-     - Example:
-       ```
-       AssertionError: ValidationError not raised
-       Expected: ValidationError('email is required')
-       Actual: None
-       ```
+   **Severity Mapping from test-plan.md:**
+   - test-plan.md Priority "Critical" → Severity "Critical"
+   - test-plan.md Priority "High" → Severity "High"
+   - test-plan.md Priority "Medium" → Severity "Medium"
+   - test-plan.md Priority "Low" → Severity "Low"
 
-   - **Severity**: Match the Priority from test-plan.md
-     - test-plan.md Priority "Critical" → Severity "Critical"
-     - test-plan.md Priority "High" → Severity "High"
-     - test-plan.md Priority "Medium" → Severity "Medium"
-     - test-plan.md Priority "Low" → Severity "Low"
-
-   - **Status**: "New"
-
-   - **Project**: Link to the current project you're working on
-
-   - **Task**: Link to the specific task being worked on
-     - Example: Task "1.1 Write database layer tests"
-
-   - **Steps to Reproduce**: Provide context
-     - Example:
-       ```
-       Context: Implementing Database Layer Task Group 1
-       Test: test_user_creation_requires_email (test #1 from test-plan.md)
-
-       Attempted Fixes:
-       1. Added email validation in User.__init__ - still fails
-       2. Checked that ValidationError is imported from correct module
-       3. Added debug print - User.create() returns None instead of raising error
-       ```
-
-   - **Reported Date**: Today's date (auto-filled by Notion)
-
-   - **Assignee**: Yourself or leave blank for user to assign
+   **Example MCP call:**
+   ```json
+   {
+     "parent": {"type": "data_source_id", "data_source_id": "9bc9eef1-dad7-4839-a7fd-689f1eff91ad"},
+     "pages": [{
+       "properties": {
+         "Name": "test_user_creation_requires_email fails - ValidationError not raised",
+         "Test Name": "test_user_creation_requires_email",
+         "Test File": "backend/tests/models/test_user.py",
+         "Error Message": "AssertionError: ValidationError not raised",
+         "Severity": "Critical",
+         "Status": "New",
+         "Steps to Reproduce": "Context: Database Layer Task Group 1\nAttempted: Added validation in __init__ - still fails",
+         "date:Reported Date:start": "2025-12-31",
+         "date:Reported Date:is_datetime": 0
+       }
+     }]
+   }
+   ```
 
 5. **After logging bug:**
    - **DO NOT** skip the test or comment it out
@@ -275,6 +283,80 @@ This validates:
   - Take screenshots of the views and UI elements you've tested and store those in `agent-os/specs/[this-spec]/verification/screenshots/`.  Do not store screenshots anywhere else in the codebase other than this location.
   - Analyze the screenshot(s) you've taken to check them against your current requirements.
 
+## E2E Tests (STANDARD and COMPLEX tracks only)
+
+If `test-plan.md` contains an **E2E Tests** section, you MUST implement those tests.
+
+### When to Write E2E Tests
+
+| Track | E2E Required? |
+|-------|---------------|
+| 🚀 FAST | Optional |
+| ⚙️ STANDARD | **Required** for UI tasks |
+| 🏗️ COMPLEX | **Required** for all flows |
+
+### Determine E2E Tool
+
+Check `agent-os/standards/global-standards.md` (Tech Stack):
+
+| Project Type | Tool | Location | Run Command |
+|--------------|------|----------|-------------|
+| Mobile (Expo/RN) | Maestro | `maestro/flows/*.yaml` | `maestro test maestro/flows/` |
+| Web (Next.js/Vite) | Playwright | `frontend/e2e/*.spec.ts` | `npm run test:e2e` |
+
+### TestID Convention
+
+Add test identifiers to UI components:
+
+```tsx
+// Mobile (React Native) - testID prop
+<TouchableOpacity testID="favorite-button" />
+
+// Web (React) - data-testid attribute
+<button data-testid="favorite-button" />
+```
+
+**Naming:** `{action}-button`, `{field}-input`, `{type}-card`, `{type}-list`
+
+### E2E Completion Checklist
+
+Before marking UI tasks complete:
+- [ ] All tests from test-plan.md E2E section implemented
+- [ ] All UI components have test identifiers
+- [ ] Local E2E run passes
+- [ ] Tests follow project naming conventions
+
+## Standards Compliance Check (REQUIRED before marking tasks complete)
+
+Before marking any task as complete, run the standards verification:
+
+```bash
+./scripts/verify-standards.sh
+```
+
+This validates:
+1. **Backend linting (Ruff)**: Python code style and potential errors
+2. **TypeScript type check**: Mobile code type safety
+3. **Security audit**: No hardcoded secrets, proper .env handling
+4. **API contract consistency**: Backend/mobile type alignment
+5. **Code quality**: No debug statements (console.log, print) in production code
+
+### Handling Standards Violations
+
+| Severity | Action |
+|----------|--------|
+| **Linting errors** | Fix immediately with `./scripts/verify-standards.sh --fix` |
+| **Type errors** | Fix before marking task complete |
+| **Security issues** | **CRITICAL** - Must fix before any commit |
+| **Warnings** | Note in implementation report, fix if time permits |
+
+### Minimum Requirements
+
+- [ ] `ruff check` passes with 0 errors
+- [ ] `tsc --noEmit` passes with 0 errors
+- [ ] No hardcoded secrets detected
+- [ ] No .env files tracked by git
+
 
 ## User Standards & Preferences Compliance
 
@@ -304,3 +386,6 @@ IMPORTANT: Ensure that the tasks list you create IS ALIGNED and DOES NOT CONFLIC
 @agent-os/standards/global/security.md
 @agent-os/standards/global/ci-cd-devops.md
 @agent-os/standards/testing/test-writing.md
+
+# Error & Blocking Management
+@agent-os/standards/global/error-handling.md

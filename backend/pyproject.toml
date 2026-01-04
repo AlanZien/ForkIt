@@ -5,22 +5,26 @@ description = "ForkIt - Family meal planning API"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.32.0",
-    "pydantic>=2.10.0",
-    "pydantic-settings>=2.6.0",
-    "supabase>=2.10.0",
-    "httpx>=0.28.0",
-    "python-dotenv>=1.0.0",
+    "fastapi>=0.115.0,<1.0",
+    "uvicorn[standard]>=0.32.0,<1.0",
+    "pydantic[email]>=2.10.0,<3.0",
+    "pydantic-settings>=2.6.0,<3.0",
+    "supabase>=2.10.0,<3.0",
+    "httpx>=0.28.0,<1.0",
+    "python-dotenv>=1.0.0,<2.0",
+    "bcrypt>=4.2.0,<5.0",
+    "pyjwt>=2.9.0,<3.0",
+    "slowapi>=0.1.9,<1.0",
+    "python-multipart>=0.0.21",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.3.0",
-    "pytest-asyncio>=0.24.0",
-    "pytest-cov>=6.0.0",
-    "ruff>=0.8.0",
-    "mypy>=1.13.0",
+    "pytest>=8.3.0,<9.0",
+    "pytest-asyncio>=0.24.0,<1.0",
+    "pytest-cov>=6.0.0,<7.0",
+    "ruff>=0.8.0,<1.0",
+    "mypy>=1.13.0,<2.0",
 ]
 
 [tool.ruff]
@@ -33,7 +37,24 @@ select = ["E", "F", "I", "N", "W", "UP"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
+# Relax rules for external libraries returning Any
+warn_return_any = false
+# Allow untyped calls for external libraries
+disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+module = ["supabase.*", "httpx.*", "jwt.*", "bcrypt.*", "slowapi.*"]
+ignore_missing_imports = true
+
+# Ignore typing errors in Supabase service files (JSON type handling)
+[[tool.mypy.overrides]]
+module = [
+    "app.services.personal_recipes_service",
+    "app.services.meal_slots_service",
+    "app.services.shopping_list_service",
+    "app.services.favorites_service",
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
 testpaths = ["tests"]

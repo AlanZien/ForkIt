@@ -122,6 +122,9 @@ it('calls onPress when pressed', () => {
 | **frontend-patterns** | ~900 | Components, styling, accessibility |
 | **global-standards** | ~1400 | Coding style, naming, conventions |
 | **ci-cd-devops** | ~2900 | Deployment, CI/CD, monitoring |
+| **error-handling** | ~500 | Blocking issues, error escalation |
+| **api-contracts** | ~600 | Backend ↔ Mobile type sync |
+| **workflow-metrics** | ~500 | Execution tracking, analysis |
 
 ## 🚦 Decision Tree
 

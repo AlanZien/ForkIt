@@ -37,9 +37,9 @@ The spec-shaper will give you several separate responses that you MUST show to t
 - Display these questions to the user and wait for their response
 - The spec-shaper may ask you to relay follow-up questions that you must present to user
 
-### PHASE 3: Inform the user
+### PHASE 3: Present Complexity Analysis and Track Selection
 
-After all steps complete, inform the user:
+The spec-shaper will return a complexity analysis with a recommended track. Present this to the user:
 
 ```
 Spec shaping is complete!
@@ -48,5 +48,88 @@ Spec shaping is complete!
 ✅ Requirements gathered
 ✅ Visual assets: [Found X files / No files provided]
 
-NEXT STEP 👉 Run `/write-spec` to generate the detailed specification document.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 COMPLEXITY ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[Display the complexity score and breakdown from spec-shaper]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 RECOMMENDED TRACK: [TRACK NAME]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[Display the recommended workflow steps]
+
+Do you accept this track? (yes/override with: fast, standard, complex)
+```
+
+Wait for user response.
+
+### PHASE 4: Confirm Track and Show Next Steps
+
+Based on user's response:
+
+**If user accepts (yes, ok, enter, or no response):**
+Use the recommended track.
+
+**If user overrides (fast, standard, or complex):**
+Use the specified track instead.
+
+Save the selected track to `[spec-path]/planning/track.md`:
+
+```markdown
+# Workflow Track
+
+**Selected Track:** [🚀 FAST / ⚙️ STANDARD / 🏗️ COMPLEX]
+**Selection Method:** [Recommended / User Override]
+**Complexity Score:** [X] points
+
+## Workflow Steps
+
+1. [Step 1]
+2. [Step 2]
+3. [...]
+```
+
+Then inform the user with track-specific next steps:
+
+**For 🚀 FAST track:**
+```
+Track confirmed: 🚀 FAST
+
+NEXT STEPS:
+1. /write-spec → Generate specification
+2. /create-tasks → Create task list
+3. /implement-tasks → Implement the feature
+
+Run `/write-spec` to continue.
+```
+
+**For ⚙️ STANDARD track:**
+```
+Track confirmed: ⚙️ STANDARD
+
+NEXT STEPS:
+1. /write-spec → Generate specification
+2. /plan-tests → Create test plan (REQUIRED)
+3. /create-tasks → Create task list
+4. /implement-tasks → Implement with TDD
+5. Implementation verification
+
+Run `/write-spec` to continue.
+```
+
+**For 🏗️ COMPLEX track:**
+```
+Track confirmed: 🏗️ COMPLEX
+
+NEXT STEPS:
+1. /verify-spec → Validate specification coherence (REQUIRED)
+2. /write-spec → Generate specification
+3. /plan-tests → Create comprehensive test plan (REQUIRED)
+4. /create-tasks → Create task list
+5. /orchestrate-tasks → Parallel implementation
+6. Full verification suite
+
+Run `/verify-spec` to continue (or /write-spec if spec already validated).
 ```

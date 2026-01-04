@@ -146,6 +146,44 @@ Write `agent-os/specs/[current-spec]/test-plan.md` with this structure:
 **Then:** [Final state and data persistence verified]
 **Related Requirement:** [Reference to spec.md section]
 
+## E2E Tests
+
+> **Note:** E2E tests are required for STANDARD and COMPLEX tracks.
+> Check `agent-os/standards/global-standards.md` (Tech Stack) to determine the tool:
+> - **Mobile (Expo/React Native)** → Maestro (`maestro/flows/*.yaml`)
+> - **Web (Next.js/Vite)** → Playwright (`frontend/e2e/*.spec.ts`)
+
+### [User Journey Name] (X tests)
+
+#### [test-file-name]
+**Priority:** Critical | High | Medium
+**Preconditions:**
+- [App state required before test]
+- [User authentication state]
+- [Test data requirements]
+
+**Steps:**
+1. [User action description]
+2. [Next action]
+3. [Assertion/verification]
+
+**Success Criteria:**
+- [What indicates the test passed]
+- [Data verification if needed]
+
+**Related User Story:** [Reference to requirements.md]
+
+### Example E2E Tests by Feature Type
+
+**Authentication:**
+- login-success, login-invalid, logout, register
+
+**CRUD operations:**
+- create-[resource], view-[resource]-list, edit-[resource], delete-[resource]
+
+**Complex journeys:**
+- complete-checkout, onboarding-wizard, search-and-filter
+
 ## Test Dependencies
 
 Document execution order requirements:
@@ -207,18 +245,132 @@ Typical test counts by feature complexity:
 - **Medium feature**: 20-40 tests
 - **Large feature**: 40-80 tests
 
-### Step 6: Sync to Notion (Optional)
+### Step 6: Create User Tests (user-tests.md)
 
-If Notion tracking is enabled:
-```bash
-node scripts/sync-to-notion.js "agent-os/specs/[current-spec]"
+Create `agent-os/specs/[current-spec]/user-tests.md` with manual test scenarios for QA validation.
+
+**User tests are different from technical tests:**
+- **test-plan.md**: Automated tests (unit, integration, E2E) for developers
+- **user-tests.md**: Manual test scenarios for QA/users to validate UX and functionality
+
+```markdown
+# Tests Utilisateur - [Feature Name]
+
+## Feature
+**Nom:** [Feature Name]
+**Date:** [Date]
+**Status:** Prêt pour tests
+
+---
+
+## Prérequis
+- [List prerequisites for testing]
+- Utilisateur connecté avec un compte valide
+- Application mobile ForkIt installée
+- Connexion internet active
+
+---
+
+## Scénarios de Test
+
+### UT-001: [Test Name]
+| Champ | Valeur |
+|-------|--------|
+| **Priorité** | Critique / Haute / Moyenne |
+| **Étapes** | 1. [Step 1]<br>2. [Step 2]<br>3. [Step 3] |
+| **Résultat attendu** | [Expected result description] |
+| **Status** | À tester |
+
+---
+
+### UT-002: [Test Name]
+...
+
+---
+
+## Résumé
+
+| Priorité | Nombre de tests |
+|----------|-----------------|
+| Critique | X |
+| Haute | X |
+| Moyenne | X |
+| **Total** | **X** |
+
+---
+
+## Notes
+- Ces tests doivent être exécutés sur iOS et Android
+- Tester en mode portrait et paysage
+- Vérifier l'accessibilité (VoiceOver / TalkBack)
 ```
 
-This updates:
-- Project Status: "Test Planning Complete"
-- Current Agent: "test-planner"
+**Extract user test scenarios from:**
+- User stories in requirements.md
+- UI interactions in spec.md
+- Edge cases that require manual validation
+- UX flows that automated tests can't fully validate
 
-**Note**: If Notion sync fails, the workflow continues normally.
+### Step 7: Sync to Notion via MCP
+
+Sync both the project status and user tests to Notion using MCP tools.
+
+#### 7.1 Update Project Status
+
+Use `mcp__plugin_Notion_notion__notion-search` to find the project, then `mcp__plugin_Notion_notion__notion-update-page` to update:
+- Set `Status` to "En cours" (or appropriate status)
+- Update any relevant fields
+
+#### 7.2 Create User Tests in Notion
+
+Use `mcp__plugin_Notion_notion__notion-create-pages` to create all user tests in the "Tests Utilisateur" database.
+
+**Database:** `collection://3c8a75fb-6366-4acb-acf9-9afcbcfd7128` (Tests Utilisateur)
+
+**Property Mapping:**
+
+| user-tests.md Field | Notion Property | Value |
+|---------------------|-----------------|-------|
+| Test ID (e.g., "UT-001") | `Name` | Title (format: "UT-001: Description") |
+| Priorité | `Priorité` | "Critique", "Important", "Normal" |
+| Étapes | `Étapes` | Text (steps as numbered list) |
+| Résultat attendu | `Résultat attendu` | Text |
+| Status | `Statut` | "À tester" |
+| Feature group | `Groupe` | "Auth", "Recettes", "Planning", "Courses" |
+| Date | `Date` | Today's date |
+
+**Priority Mapping:**
+- Critique → "Critique"
+- Haute → "Important"
+- Moyenne → "Normal"
+
+**Groupe Mapping (based on feature type):**
+- Authentication features → "Auth"
+- Recipe features → "Recettes"
+- Meal planning features → "Planning"
+- Shopping list features → "Courses"
+
+#### Example: Creating a user test
+
+```json
+{
+  "parent": {"type": "data_source_id", "data_source_id": "3c8a75fb-6366-4acb-acf9-9afcbcfd7128"},
+  "pages": [{
+    "properties": {
+      "Name": "UT-001: Afficher les préférences en mode lecture",
+      "Priorité": "Important",
+      "Groupe": "Auth",
+      "Statut": "À tester",
+      "Étapes": "1. Se connecter à l'application\n2. Naviguer vers l'onglet Profil",
+      "Résultat attendu": "Les sections Régimes, Allergies, Ingrédients s'affichent en mode lecture seule",
+      "date:Date:start": "2026-01-02",
+      "date:Date:is_datetime": 0
+    }
+  }]
+}
+```
+
+**Note**: If Notion sync fails, the workflow continues normally. user-tests.md is the source of truth.
 
 ## Important Constraints
 
@@ -269,5 +421,8 @@ IMPORTANT: Ensure tests align with the tech stack and testing frameworks defined
 
 # Testing Standards
 @agent-os/standards/testing/test-writing.md
+
+# Error & Blocking Management
+@agent-os/standards/global/error-handling.md
 
 Use the testing frameworks, patterns, and conventions from these standards when specifying tests.

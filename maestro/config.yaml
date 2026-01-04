@@ -1,0 +1,23 @@
+# Maestro E2E Test Configuration
+# Documentation: https://maestro.mobile.dev/
+
+# App configuration
+appId: ${APP_BUNDLE_ID}
+
+# Default settings
+flows:
+  - flows/
+
+# Environment variables (loaded from .env.maestro)
+env:
+  BASE_URL: ${BASE_URL:-http://localhost:8000}
+  TEST_USER_EMAIL: ${TEST_USER_EMAIL:-test@example.com}
+  TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:-testpassword123}
+
+# Timeouts
+timeout: 30000
+
+# Screenshot settings
+screenshots:
+  enabled: true
+  directory: screenshots/

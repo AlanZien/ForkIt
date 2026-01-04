@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "description": "ForkIt workflow execution metrics log",
+  "specs": [
+    {
+      "spec_id": "2025-12-31-authentication-system",
+      "date": "2025-12-31",
+      "track": "COMPLEX",
+      "complexity_points": 25,
+      "duration_minutes": 120,
+      "task_groups": 6,
+      "tests": {"total": 45, "passed": 45, "failed": 0},
+      "standards": {"linting": "pass", "types": "pass", "security": "pass", "api_sync": "pass"},
+      "files": {"created": 18, "modified": 5}
+    },
+    {
+      "spec_id": "2026-01-02-recipe-browsing",
+      "date": "2026-01-02",
+      "track": "STANDARD",
+      "complexity_points": 14,
+      "duration_minutes": 60,
+      "task_groups": 4,
+      "tests": {"total": 28, "passed": 28, "failed": 0},
+      "standards": {"linting": "pass", "types": "pass", "security": "pass", "api_sync": "pass"},
+      "files": {"created": 12, "modified": 3}
+    },
+    {
+      "spec_id": "2026-01-03-weekly-meal-planning",
+      "date": "2026-01-03",
+      "track": "STANDARD",
+      "complexity_points": 16,
+      "duration_minutes": 75,
+      "task_groups": 5,
+      "tests": {"total": 35, "passed": 35, "failed": 0},
+      "standards": {"linting": "pass", "types": "pass", "security": "pass", "api_sync": "pass"},
+      "files": {"created": 14, "modified": 4}
+    },
+    {
+      "spec_id": "2026-01-03-shopping-list-generation",
+      "date": "2026-01-03",
+      "track": "STANDARD",
+      "complexity_points": 12,
+      "duration_minutes": 50,
+      "task_groups": 4,
+      "tests": {"total": 22, "passed": 22, "failed": 0},
+      "standards": {"linting": "pass", "types": "pass", "security": "pass", "api_sync": "pass"},
+      "files": {"created": 10, "modified": 2}
+    },
+    {
+      "spec_id": "2026-01-04-onboarding-flow",
+      "date": "2026-01-04",
+      "track": "STANDARD",
+      "complexity_points": 15,
+      "duration_minutes": 45,
+      "task_groups": 5,
+      "tests": {"total": 25, "passed": 25, "failed": 0},
+      "standards": {"linting": "pass", "types": "pass", "security": "pass", "api_sync": "pass"},
+      "files": {"created": 14, "modified": 4}
+    }
+  ]
+}
