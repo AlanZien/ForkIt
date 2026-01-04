@@ -37,9 +37,7 @@ class ShoppingListItemBase(BaseModel):
 class ShoppingListItemCreate(ShoppingListItemBase):
     """Request model for creating a shopping list item."""
 
-    week_start: date_type = Field(
-        ..., description="Monday of the week (YYYY-MM-DD)"
-    )
+    week_start: date_type = Field(..., description="Monday of the week (YYYY-MM-DD)")
 
     @field_validator("week_start")
     @classmethod
