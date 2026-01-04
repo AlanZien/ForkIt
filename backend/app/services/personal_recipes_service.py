@@ -194,11 +194,7 @@ class PersonalRecipesService:
             "source_recipe_id": None,  # Set during fork operation
         }
 
-        response = (
-            self.client.table(self.TABLE_RECIPES)
-            .insert(recipe_data)
-            .execute()
-        )
+        response = self.client.table(self.TABLE_RECIPES).insert(recipe_data).execute()
 
         recipe = response.data[0]
         recipe_id = recipe["id"]
@@ -217,9 +213,7 @@ class PersonalRecipesService:
         ]
 
         ingredients_response = (
-            self.client.table(self.TABLE_INGREDIENTS)
-            .insert(ingredients_data)
-            .execute()
+            self.client.table(self.TABLE_INGREDIENTS).insert(ingredients_data).execute()
         )
 
         # Insert steps with step_number (1-indexed)
@@ -233,9 +227,7 @@ class PersonalRecipesService:
         ]
 
         steps_response = (
-            self.client.table(self.TABLE_STEPS)
-            .insert(steps_data)
-            .execute()
+            self.client.table(self.TABLE_STEPS).insert(steps_data).execute()
         )
 
         # Build and return the response
@@ -302,11 +294,7 @@ class PersonalRecipesService:
             "source_recipe_id": source_recipe_id,
         }
 
-        response = (
-            self.client.table(self.TABLE_RECIPES)
-            .insert(recipe_data)
-            .execute()
-        )
+        response = self.client.table(self.TABLE_RECIPES).insert(recipe_data).execute()
 
         recipe = response.data[0]
         recipe_id = recipe["id"]
@@ -325,9 +313,7 @@ class PersonalRecipesService:
         ]
 
         ingredients_response = (
-            self.client.table(self.TABLE_INGREDIENTS)
-            .insert(ingredients_data)
-            .execute()
+            self.client.table(self.TABLE_INGREDIENTS).insert(ingredients_data).execute()
         )
 
         # Insert steps with step_number (1-indexed)
@@ -341,9 +327,7 @@ class PersonalRecipesService:
         ]
 
         steps_response = (
-            self.client.table(self.TABLE_STEPS)
-            .insert(steps_data)
-            .execute()
+            self.client.table(self.TABLE_STEPS).insert(steps_data).execute()
         )
 
         # Build and return the response
@@ -403,9 +387,7 @@ class PersonalRecipesService:
         try:
             response = await themealdb_client.get_by_id(api_recipe_id)
         except Exception as e:
-            raise ExternalAPIError(
-                f"TheMealDB API unavailable: {e}"
-            ) from e
+            raise ExternalAPIError(f"TheMealDB API unavailable: {e}") from e
 
         meals = response.get("meals")
         if not meals:
@@ -444,9 +426,7 @@ class PersonalRecipesService:
             source_recipe_id=api_recipe_id,
         )
 
-    def _parse_themealdb_ingredients(
-        self, meal: dict
-    ) -> list[IngredientCreate]:
+    def _parse_themealdb_ingredients(self, meal: dict) -> list[IngredientCreate]:
         """Parse TheMealDB ingredient fields into structured ingredients.
 
         TheMealDB uses strIngredient1-20 and strMeasure1-20 fields.
@@ -484,9 +464,7 @@ class PersonalRecipesService:
 
         return ingredients
 
-    def _parse_themealdb_instructions(
-        self, meal: dict
-    ) -> list[InstructionStepCreate]:
+    def _parse_themealdb_instructions(self, meal: dict) -> list[InstructionStepCreate]:
         """Parse TheMealDB instructions into structured steps.
 
         Args:
@@ -502,10 +480,7 @@ class PersonalRecipesService:
         if not steps:
             steps = ["Prepare the recipe according to the original instructions."]
 
-        return [
-            InstructionStepCreate(instruction=step)
-            for step in steps
-        ]
+        return [InstructionStepCreate(instruction=step) for step in steps]
 
     def get_recipes(self, user_id: str) -> list[PersonalRecipeSummary]:
         """Get all personal recipes for a user.
@@ -534,9 +509,7 @@ class PersonalRecipesService:
             for recipe in response.data
         ]
 
-    def search_recipes(
-        self, user_id: str, query: str
-    ) -> list[PersonalRecipeSummary]:
+    def search_recipes(self, user_id: str, query: str) -> list[PersonalRecipeSummary]:
         """Search personal recipes by title (case-insensitive).
 
         Args:
@@ -708,9 +681,7 @@ class PersonalRecipesService:
                 for idx, ingredient in enumerate(data.ingredients)
             ]
 
-            self.client.table(self.TABLE_INGREDIENTS).insert(
-                ingredients_data
-            ).execute()
+            self.client.table(self.TABLE_INGREDIENTS).insert(ingredients_data).execute()
 
         # Handle steps replacement if provided
         if data.steps is not None:

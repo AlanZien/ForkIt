@@ -1,5 +1,7 @@
 """Recipe models for TheMealDB API responses."""
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -48,7 +50,7 @@ class Recipe(BaseModel):
     ingredients: list[Ingredient] = []
 
     @classmethod
-    def from_api_response(cls, data: dict) -> "Recipe":
+    def from_api_response(cls, data: dict[str, Any]) -> "Recipe":
         """Parse TheMealDB API response into Recipe model."""
         ingredients: list[Ingredient] = []
 

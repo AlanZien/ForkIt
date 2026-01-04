@@ -40,9 +40,7 @@ class FavoritesService:
             for row in response.data
         ]
 
-    def add_favorite(
-        self, user_id: str, data: FavoriteCreate
-    ) -> FavoriteResponse:
+    def add_favorite(self, user_id: str, data: FavoriteCreate) -> FavoriteResponse:
         """Add a recipe to user's favorites.
 
         Args:

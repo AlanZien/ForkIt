@@ -45,7 +45,7 @@ async def unified_search_recipes(
     personal_recipes_service: PersonalRecipesService = Depends(
         get_personal_recipes_service
     ),
-):
+) -> UnifiedSearchResponse:
     """Search recipes across personal recipes and TheMealDB API.
 
     Personal recipes are returned first, then API recipes.
@@ -57,9 +57,7 @@ async def unified_search_recipes(
 
     # Search personal recipes if user is authenticated
     if current_user:
-        personal_results = personal_recipes_service.search_recipes(
-            current_user.id, q
-        )
+        personal_results = personal_recipes_service.search_recipes(current_user.id, q)
         personal_count = len(personal_results)
         for recipe in personal_results:
             unified_results.append(
@@ -84,12 +82,12 @@ async def unified_search_recipes(
         recipes = RecipeFilterService.filter_recipes(recipes, preferences)
 
     api_count = len(recipes)
-    for recipe in recipes:
+    for api_recipe in recipes:
         unified_results.append(
             UnifiedRecipeSummary(
-                id=recipe.id,
-                name=recipe.name,
-                thumbnail=recipe.thumbnail or "",
+                id=api_recipe.id,
+                name=api_recipe.name,
+                thumbnail=api_recipe.thumbnail or "",
                 source="api",
             )
         )
@@ -106,7 +104,7 @@ async def search_recipes(
     q: str = Query(..., min_length=1, description="Search query"),
     current_user: UserResponse | None = Depends(get_optional_user),
     preferences_service: PreferencesService = Depends(get_preferences_service),
-):
+) -> RecipeListResponse:
     """Search recipes by name.
 
     If user is authenticated, filters results based on their preferences.
@@ -144,7 +142,7 @@ async def search_recipes(
 async def get_random_recipe(
     current_user: UserResponse | None = Depends(get_optional_user),
     preferences_service: PreferencesService = Depends(get_preferences_service),
-):
+) -> RecipeDetailResponse:
     """Get a random recipe.
 
     If user is authenticated, retries up to MAX_RANDOM_ATTEMPTS times
@@ -188,7 +186,7 @@ async def get_random_recipe(
 
 
 @router.get("/categories", response_model=CategoryListResponse)
-async def list_categories():
+async def list_categories() -> CategoryListResponse:
     """List all recipe categories."""
     response = await themealdb_client.list_categories()
     categories_data = response.get("categories") or []
@@ -211,7 +209,7 @@ async def get_recipes_by_category(
     category_name: str,
     current_user: UserResponse | None = Depends(get_optional_user),
     preferences_service: PreferencesService = Depends(get_preferences_service),
-):
+) -> RecipeListResponse:
     """Get recipes by category.
 
     If user is authenticated, filters results based on their preferences.
@@ -265,7 +263,7 @@ async def get_recipes_by_category(
 
 
 @router.get("/{recipe_id}", response_model=RecipeDetailResponse)
-async def get_recipe_by_id(recipe_id: str):
+async def get_recipe_by_id(recipe_id: str) -> RecipeDetailResponse:
     """Get recipe details by ID."""
     response = await themealdb_client.get_by_id(recipe_id)
     meals = response.get("meals") or []

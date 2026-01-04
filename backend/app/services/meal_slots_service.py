@@ -70,9 +70,7 @@ class MealSlotsService:
         if week_start > max_week_monday:
             raise ValueError("Cannot access beyond 4 weeks ahead")
 
-    def get_week_slots(
-        self, user_id: str, week_start: date
-    ) -> list[MealSlotResponse]:
+    def get_week_slots(self, user_id: str, week_start: date) -> list[MealSlotResponse]:
         """Get all meal slots for a user for a specific week.
 
         Args:
@@ -267,9 +265,7 @@ class MealSlotsService:
             updated_at=row["updated_at"],
         )
 
-    def delete_slot(
-        self, user_id: str, slot_date: date, meal_type: MealType
-    ) -> bool:
+    def delete_slot(self, user_id: str, slot_date: date, meal_type: MealType) -> bool:
         """Delete a meal slot.
 
         Args:
